@@ -5,7 +5,7 @@ from classProvider import vlanInterface
 from NetScan import scan
 from SSHutilities import backupConfigsOfDevicesInList
 from SSHutilities import eraseAllDevices
-from JsonUtils import callJsonSave
+from FileOperationsUtils import saveToInventoryFile
 import socket
 import os
 
@@ -18,10 +18,9 @@ def getIpOfHost():
 
 
 menue = '''
-A: Scan And Backup
+A: Scan And Build Inventory File
 B: Wipe Configs And Reload
 What would you like to do?:'''
-print(os.getcwd())
 while True:
     userInput = input(menue).lower()
     #scan for devices, add them to the inventory file and backup there configs.
@@ -42,22 +41,16 @@ while True:
             print("Error Scanning Network! " + str(e))
             continue
         try:
-            devices = backupConfigsOfDevicesInList(devices)
+            saveToInventoryFile()
         except Exception as e:
-            print("Error Backingup Devices! " + str(e))
-            continue
-        try:
-            callJsonSave(devices)
-        except Exception as e:
-            print("Error creating Inventory Files! " + str(e))
-            continue
+            print("Error Saving to JSon File: " + e)
     #Scan for devices and wipe them
     elif(userInput == "b"):
-        userInput = input("Are you sure you want to whipe everyhting(Y to continue, anything else to abort)?: ").lower()
+        userInput = input("Are you sure you want to wipe everything(Y to continue, anything else to abort)?: ").lower()
         try:
             network = getIpOfHost()
         except:
-            print("Error Finding IP Of Host OR Network!")
+            print("Error Finding IP Of Host Or Network!")
             continue
         if(userInput == "y"):
             try:
