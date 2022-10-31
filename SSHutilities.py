@@ -1,5 +1,20 @@
+import string
 import netmiko
 from classProvider import netDevice
+def netmikoSendCommandsToDevice(commands: list,Device : netDevice):
+    DeviceInfo = {
+            'device_type': Device.Brand,
+            'ip': Device.managementAddress,
+            'username': 'cisco',
+            'password': 'cisco',
+            'secret': 'cisco',
+            }
+    for command in commands:
+        pass
+    
+
+
+
 
 def backupConfigsOfDevicesInList(DeviceList):
 
@@ -11,7 +26,6 @@ def backupConfigsOfDevicesInList(DeviceList):
             'username': 'cisco',
             'password': 'cisco',
             'secret': 'cisco',
-            
             }
             ssh = netmiko.ConnectHandler(**DeviceInfo)
             ssh.enable()
@@ -19,6 +33,7 @@ def backupConfigsOfDevicesInList(DeviceList):
             CiscoDevice.config = ShowRun
             Hostname = ssh.send_command('show run | sec hostname').split()[1]
             CiscoDevice.hostName = Hostname
+            
             #print(ShowRun)
             print(Hostname)
             ssh.disconnect()
