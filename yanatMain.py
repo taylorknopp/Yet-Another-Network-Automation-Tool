@@ -1,4 +1,6 @@
 
+from re import A
+from turtle import back
 from classProvider import netDevice
 from classProvider import networkPort
 from classProvider import vlanInterface
@@ -55,22 +57,61 @@ def wipeDevices():
             print("Error Clearing Devices! " + str(e))
             return
 
+def ScanANdBuildInventory():
+    print("san")
+    pass
 
-menueInputToFunctionMap = {'a':scanNet,'b':wipeDevices}
+def uploadConfigs():
+    print("upload Config")
+    pass
+
+def configureRouting():
+    print("Config Routing")
+    pass
+
+def backupConfigs():
+    print("backupConfigs")
+    pass
+
+def extractConfigs():
+    print("extractConfigs")
+    pass
+
+def wipeConfigs():
+    print("wipeConfigs")
+    pass
+
+def testConectivity():
+    print("test connectivity")
+    pass
+
+
+
+
+
+menueInputToFunctionMap = {'a':scanNet,'b':wipeDevices, 'c': configureRouting, 'd': backupConfigs, 
+'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity}
 
 
 menue = '''
 A: Scan And Build Inventory File
-B: Wipe Configs And Reload
-What would you like to do?:'''
+B: Apply Config Backup To Device or Devices
+C: Configure static or Dynamic Routing on a L3 Device
+D: Backup Configurations into Inventory File
+E: Extract configs from inventory
+X: Wipe Configs And Reload
+Y: Connectivity Test(ping/trace)
+What would you like to do?:
+'''
 
 
 while True:
     userInput = input(menue).lower()
     #scan for devices, add them to the inventory file and backup there configs.
-    if(userInput in menueInputToFunctionMap.keys):
-
-        menueInputToFunctionMap[userInput]()
+    if(userInput in menueInputToFunctionMap.keys()):
+        
+        funcToCall = menueInputToFunctionMap[userInput]
+        funcToCall()
     elif userInput == "q":
         break;
     else:
