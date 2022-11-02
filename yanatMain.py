@@ -101,8 +101,7 @@ D: Backup Configurations into Inventory File
 E: Extract configs from inventory
 X: Wipe Configs And Reload
 Y: Connectivity Test(ping/trace)
-What would you like to do?:
-'''
+What would you like to do?: '''
 
 
 while True:
