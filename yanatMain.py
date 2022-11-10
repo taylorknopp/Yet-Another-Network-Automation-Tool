@@ -1,6 +1,5 @@
 
 from re import A
-from turtle import back
 from classProvider import netDevice
 from classProvider import networkPort
 from classProvider import vlanInterface
@@ -101,6 +100,7 @@ D: Backup Configurations into Inventory File
 E: Extract configs from inventory
 X: Wipe Configs And Reload
 Y: Connectivity Test(ping/trace)
+Q: Quit
 What would you like to do?: '''
 
 
