@@ -1,6 +1,7 @@
 import string
 import netmiko
 from classProvider import netDevice
+from classProvider import networkPort
 def netmikoSendCommandsToDevice(commands: list,Device : netDevice):
     DeviceInfo = {
             'device_type': Device.Brand,
@@ -25,10 +26,23 @@ def BuildInventoryOfDevicesInList(DeviceList):
             }
             ssh = netmiko.ConnectHandler(**DeviceInfo)
             ssh.enable()
-            ShowRun = ssh.send_command('show run')
-            CiscoDevice.config = ShowRun
             Hostname = ssh.send_command('show run | sec hostname').split()[1]
             CiscoDevice.hostName = Hostname
+            interfaces = ssh.send_command("show ip interface brief",use_textfsm= True)
+            for port in interfaces:
+                interface = networkPort()
+                interface.name = port["intf"]
+                interface.ipAddress = port["ipaddr"]
+                if "up" in port["status"]:
+                    interface.isUp = True
+                else:
+                    interface.isUp = False
+                CiscoDevice.ports.append(interface)
+
+                
+
+                
+
             
             #print(ShowRun)
             print(Hostname)
@@ -83,3 +97,24 @@ def eraseAllDevices(DeviceList):
             
         except:
             print("Connection Failure For: " + CiscoDevice.managementAddress)
+
+
+
+def checkIfDeviceIsCisco(managementAddress) -> bool:
+    DeviceInfo = {
+            'device_type': 'cisco_ios',
+            'ip': managementAddress,
+            'username': 'cisco',
+            'password': 'cisco',
+            'secret': 'cisco',
+            }
+
+    
+    try:
+        ssh = netmiko.ConnectHandler(**DeviceInfo)
+        ssh.enable()
+        ssh.disconnect()
+        return True
+    except:
+        return False
+

@@ -6,6 +6,8 @@ from SSHutilities import backupConfigsOfDevicesInList
 from SSHutilities import BuildInventoryOfDevicesInList
 from SSHutilities import eraseAllDevices
 from FileOperationsUtils import saveToInventoryFile
+from SSHutilities import checkIfDeviceIsCisco
+from FileOperationsUtils import loadInventoryFromFile
 import socket
 import os
 
@@ -41,7 +43,11 @@ def scanNet():
     except Exception as e:
         print("Error scanning network! " + str(e))
         return
+
     
+            
+    
+        
                 
 
 def wipeDevices():
@@ -71,7 +77,8 @@ def configureRouting():
     pass
 
 def backupConfigs():
-    print("backupConfigs")
+    global listOfDevices
+    listOfDevices = backupConfigsOfDevicesInList(listOfDevices).copy()
     pass
 
 def extractConfigs():
@@ -98,8 +105,37 @@ def InventoryFileSetupAndSave():
 
     while True:
         usrInput = input("Please enter file path or blank to sue the exsiting path: ")
+        path = ""
+        if usrInput == "" and os.path.exists(inventoryFile):
+            break
+        elif userInput == "" and not os.path.exists(inventoryFile):
+            print("Inventory file not found! ")
+            continue
+        else:
+            print("Invalid input")
+          
+    print(path)
+    saveToInventoryFile(listOfDevices,inventoryFile)
+
+def loadInventory():
+    global inventoryFile
+    global listOfDevices
+
+    while True:
+        usrInput = input("Please enter file path or blank to sue the exsiting path: ")
+        path = ""
+        
+
+            
         if "\\" in usrInput:
-            if usrInput != "" and os.path.exists(usrInput):
+            path = ""
+            if ".json" in usrInput:
+                parts = usrInput.split('\\')
+                for part in parts[0:len(parts) - 1]:
+                    path += part + '\\'
+            else:
+                path = usrInput
+            if usrInput != "" and os.path.exists(path):
                 inventoryFile = usrInput
                 break
             elif userInput == "" and len(inventoryFile) > 0:
@@ -118,12 +154,11 @@ def InventoryFileSetupAndSave():
                 break
             else:
                 print("Invalid Input")
-        saveToInventoryFile(listOfDevices,inventoryFile)
-
-
+        print(path)
+    listOfDevices = loadInventoryFromFile(inventoryFile)  
 
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
-'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity,'s':InventoryFileSetupAndSave}
+'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory}
 
 
 menue = '''
@@ -146,7 +181,11 @@ while True:
     print("Devices: ")
     print("==============================================================================")
     for dev in listOfDevices:
-            print(dev.managementAddress + " | " + dev.hostName)
+            try:
+                numPorts = len(dev.ports)
+            except:
+                numPorts = 0
+            print(dev.managementAddress + " | " + dev.hostName + " | Number Of Interaces: " + str(numPorts))
     print("==============================================================================")
 
 

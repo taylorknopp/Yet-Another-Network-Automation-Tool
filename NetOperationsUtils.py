@@ -1,6 +1,7 @@
 from classProvider import netDevice
 import os
 import IpTools
+from SSHutilities import checkIfDeviceIsCisco
 
 
 def scan(subnet):
@@ -21,15 +22,16 @@ def scan(subnet):
 
 
    
-    for n in range(1, 255):
+    for n in range(1, 50):
         device_ip = subnet.split(".")[0] + "." + subnet.split(".")[1]+ "." + subnet.split(".")[2]+ "." + str(n)
         print(device_ip)
-        loss = os.system('ping -w 10 -n 1 ' + device_ip)
+        loss = os.system('ping -w 50 -n 1 ' + device_ip)
         if loss == 0:
-            newDevice = netDevice()
-            newDevice.managementAddress = device_ip
-            list_of_devices.append(newDevice)
-            print ("device is up" ,device_ip) 
+            if checkIfDeviceIsCisco(device_ip):
+                newDevice = netDevice()
+                newDevice.managementAddress = device_ip
+                list_of_devices.append(newDevice)
+                print ("device is up" ,device_ip) 
         else:
                 print ("device is down" ,device_ip)
     return list_of_devices
