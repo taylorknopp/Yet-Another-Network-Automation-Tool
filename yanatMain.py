@@ -1,5 +1,3 @@
-
-from re import A
 from classProvider import netDevice
 from classProvider import networkPort
 from classProvider import vlanInterface
