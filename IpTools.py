@@ -66,3 +66,11 @@ def DecimalToCider(decimal):
         #this iteration is not the correct value so increment the index counter
         count += 1
     return ""
+
+def ValidateMask(mask: str):
+    if "/" in mask:
+        if mask.replace('/','') in CiderVSDecimalLookupDict.keys():
+            return True
+    elif mask in CiderVSDecimalLookupDict.values():
+        return True
+    return False

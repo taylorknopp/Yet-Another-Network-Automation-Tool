@@ -5,6 +5,7 @@ from NetOperationsUtils import scan
 from SSHutilities import backupConfigsOfDevicesInList
 from SSHutilities import BuildInventoryOfDevicesInList
 from SSHutilities import eraseAllDevices
+from SSHutilities import configureInterface
 from FileOperationsUtils import saveToInventoryFile
 from SSHutilities import checkIfDeviceIsCisco
 from FileOperationsUtils import loadInventoryFromFile
@@ -161,7 +162,24 @@ def loadInventory():
     listOfDevices = loadInventoryFromFile(inventoryFile)  
 
 def configInt():
-    pass
+    global listOfDevices
+    deviceMenu = "Devices:  \n"
+    for c,dev in enumerate(listOfDevices):
+        deviceMenu += str(c) + ". " + dev.hostName + "\n"
+    deviceMenu += "Chose a device: "
+    usrInput = input(deviceMenu)
+    devToUse = netDevice()
+    while True:
+        if usrInput == "q":
+            return
+        try:
+            devToUse =  listOfDevices[int(usrInput)]
+            break
+        except:
+            print("Invalid Input!")
+            continue
+    configureInterface(devToUse)
+        
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,'i':configInt}
 
