@@ -118,3 +118,49 @@ def checkIfDeviceIsCisco(managementAddress) -> bool:
     except:
         return False
 
+def configureInterface(device):
+    portToUse = ""
+    portMenu = "interfaces: \n"
+   
+    for c,port in enumerate(device.ports):
+
+        portMenu += str(c) + ". " +port.name + "\n"
+    portMenu += "chose port to configure or q to quit: "
+    usrInput = input(portMenu)
+    while True:
+        if usrInput == "q":
+            return
+        try:
+            portToUse =  device.ports[int(usrInput)]
+            continue
+        except:
+            print("Invalid Input!")
+            continue
+    
+
+
+    
+
+
+
+
+
+
+
+    
+    
+    DeviceInfo = {
+            'device_type': 'cisco_ios',
+            'ip': device.managementAddress,
+            'username': 'cisco',
+            'password': 'cisco',
+            'secret': 'cisco',
+            }
+
+    try:
+        ssh = netmiko.ConnectHandler(**DeviceInfo)
+        ssh.enable()
+        ssh.disconnect()
+        return True
+    except:
+        return False

@@ -102,25 +102,6 @@ def BuildInventory():
 
 def InventoryFileSetupAndSave():
     global inventoryFile
-
-    while True:
-        usrInput = input("Please enter file path or blank to sue the exsiting path: ")
-        path = ""
-        if usrInput == "" and os.path.exists(inventoryFile):
-            break
-        elif userInput == "" and not os.path.exists(inventoryFile):
-            print("Inventory file not found! ")
-            continue
-        else:
-            print("Invalid input")
-          
-    print(path)
-    saveToInventoryFile(listOfDevices,inventoryFile)
-
-def loadInventory():
-    global inventoryFile
-    global listOfDevices
-
     while True:
         usrInput = input("Please enter file path or blank to sue the exsiting path: ")
         path = ""
@@ -154,11 +135,35 @@ def loadInventory():
                 break
             else:
                 print("Invalid Input")
-        print(path)
+        print(path) 
+          
+    print(path)
+    saveToInventoryFile(listOfDevices,inventoryFile)
+
+def loadInventory():
+    global inventoryFile
+    global listOfDevices
+    usrInput = ""
+    while True:
+        usrInput = input("Please enter file path or blank to sue the exsiting path: ")
+        path = ""
+        if usrInput == "" and os.path.exists(inventoryFile):
+            break
+        elif userInput == "" and not os.path.exists(inventoryFile):
+            print("Inventory file not found! ")
+            continue
+        elif os.path.exists(usrInput):
+            inventoryFile = usrInput
+            break
+        else:
+            print("Invalid input")
+    
     listOfDevices = loadInventoryFromFile(inventoryFile)  
 
+def configInt():
+    pass
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
-'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory}
+'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,'i':configInt}
 
 
 menue = '''
