@@ -9,6 +9,11 @@ from SSHutilities import configureInterface
 from FileOperationsUtils import saveToInventoryFile
 from SSHutilities import checkIfDeviceIsCisco
 from FileOperationsUtils import loadInventoryFromFile
+from SSHutilities import setHostname
+from SSHutilities import setConfig
+from SSHutilities import pingFromDev
+from SSHutilities import traceFromDev
+import IpTools
 import socket
 import os
 
@@ -18,7 +23,7 @@ import os
 
 
 listOfDevices = []
-inventoryFile = ""
+inventoryFile = "inventory.json"
 
 
 def getIpOfHost():
@@ -91,8 +96,49 @@ def wipeConfigs():
     pass
 
 def testConectivity():
-    print("test connectivity")
-    pass
+    thingToDo = ""
+    while True:
+        thingToDo = input("(P)ing, (T)race or (Q)uit: ").lower()
+        if thingToDo == "p":
+            break
+        elif thingToDo == "t":
+            break
+        elif thingToDo == "q":
+            return
+        
+        print("Invalid Input")
+    global listOfDevices
+    deviceMenu = "Devices:  \n"
+    for c,dev in enumerate(listOfDevices):
+        deviceMenu += str(c) + ". " + dev.hostName + "\n"
+    deviceMenu += "Chose a device To Test From: "
+    usrInput = input(deviceMenu)
+    devToUse = netDevice()
+    while True:
+        if usrInput == "q":
+            return
+        try:
+            devToUse =  listOfDevices[int(usrInput)]
+            break
+        except:
+            print("Invalid Input!")
+            continue
+    ipAddress = ""
+    while True:
+        ipAddress = input("Target Address or q to quit: ").lower()
+        if ipAddress == "q":
+            return
+        elif IpTools.validateIp(ipAddress):
+            break
+        print("Invalid IP")
+    if thingToDo == "p":
+        pingFromDev(devToUse,ipAddress)
+    elif thingToDo == "t":
+        traceFromDev(devToUse,ipAddress)
+    input("Continue?")
+
+
+
 
 def BuildInventory():
     global listOfDevices
@@ -146,7 +192,7 @@ def loadInventory():
     global listOfDevices
     usrInput = ""
     while True:
-        usrInput = input("Please enter file path or blank to sue the exsiting path: ")
+        usrInput = input("Please enter file path or blank to use the exsiting path: ")
         path = ""
         if usrInput == "" and os.path.exists(inventoryFile):
             break
@@ -180,8 +226,56 @@ def configInt():
             continue
     configureInterface(devToUse)
         
+def setHostnameOfDev():
+    global listOfDevices
+    deviceMenu = "Devices:  \n"
+    for c,dev in enumerate(listOfDevices):
+        deviceMenu += str(c) + ". " + dev.hostName + "\n"
+    deviceMenu += "Chose a device: "
+    usrInput = input(deviceMenu)
+    devToUse = netDevice()
+    while True:
+        if usrInput == "q":
+            return
+        try:
+            devToUse =  listOfDevices[int(usrInput)]
+            break
+        except:
+            print("Invalid Input!")
+            continue
+    setHostname(devToUse)
+
+def applyConfigFromInventory():
+    global listOfDevices
+    deviceMenu = "Devices:  \n"
+    for c,dev in enumerate(listOfDevices):
+        deviceMenu += str(c) + ". " + dev.hostName + "\n"
+    deviceMenu += "Chose a device: "
+    usrInput = input(deviceMenu)
+    devToUse = netDevice()
+    while True:
+        if usrInput == "q":
+            return
+        try:
+            devToUse =  listOfDevices[int(usrInput)]
+            break
+        except:
+            print("Invalid Input!")
+            continue
+    ipAddress = ""
+    while True:
+        ipAddress = input("Ip Address for Interface  or q to quit: ").lower()
+        if ipAddress == "q":
+            return
+        elif IpTools.validateIp(ipAddress):
+            break
+        print("Invalid IP")
+    setConfig(devToUse,ipAddress)
+
+
+
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
-'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,'i':configInt}
+'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory}
 
 
 menue = '''
@@ -190,10 +284,13 @@ B: Build Inventory
 C: Configure static or Dynamic Routing on a L3 Device
 D: Grab Configurations 
 E: Extract configs from inventory
+H: Set Device Hostname
+I: Configure IONterface On Device
 L: Load Inventory File
 S: Save Inventory File
+AC: Apply COnfig From Inventory
 X: Wipe Configs And Reload
-Y: Connectivity Test(ping/trace)
+Y: Connectivity Test, ping/trace(WARNING, can take a very long time)
 Q: Quit
 What would you like to do?: '''
 

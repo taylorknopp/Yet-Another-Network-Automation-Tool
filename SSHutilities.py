@@ -1,4 +1,3 @@
-import string
 import netmiko
 from classProvider import netDevice
 from classProvider import networkPort
@@ -120,6 +119,7 @@ def checkIfDeviceIsCisco(managementAddress) -> bool:
         return False
 
 def configureInterface(device):
+
     portToUse = ""
     portMenu = "interfaces: \n"
    
@@ -183,3 +183,69 @@ def configureInterface(device):
     except Exception as e:
         print(e)
         return False
+
+def setHostname(device: netDevice):
+    hostname = ""
+    while True:
+        usrInput = input("New Hostname: ")
+        if usrInput == "":
+            print("Host Name Cannot Be Blank")
+        else:
+            hostname = usrInput
+            break
+    DeviceInfo = {
+            'device_type': 'cisco_ios',
+            'ip': device.managementAddress,
+            'username': 'cisco',
+            'password': 'cisco',
+            'secret': 'cisco',
+            }
+    ssh = netmiko.ConnectHandler(**DeviceInfo)
+    ssh.enable()
+    ssh.config_mode()
+    ssh.send_command_timing("hostname " + hostname)
+
+def setConfig(configDevToSet: netDevice,ip):
+    DeviceInfo = {
+            'device_type': 'cisco_ios',
+            'ip': ip,
+            'username': 'cisco',
+            'password': 'cisco',
+            'secret': 'cisco',
+            }
+    ssh = netmiko.ConnectHandler(**DeviceInfo)
+    ssh.enable()
+    ssh.config_mode()
+    configToSend = configDevToSet.config.split('\n')
+    ssh.send_config_set(configToSend)
+    
+def pingFromDev(dev:netDevice,ip):
+    DeviceInfo = {
+            'device_type': 'cisco_ios',
+            'ip': dev.managementAddress,
+            'username': 'cisco',
+            'password': 'cisco',
+            'secret': 'cisco',
+            "fast_cli": False,
+            }
+    ssh = netmiko.ConnectHandler(**DeviceInfo)
+    ssh.enable()
+    out = ssh.send_command_timing("ping " + ip)
+    print(out)
+
+def traceFromDev(dev:netDevice,ip):
+    try:
+        DeviceInfo = {
+                'device_type': 'cisco_ios',
+                'ip': dev.managementAddress,
+                'username': 'cisco',
+                'password': 'cisco',
+                'secret': 'cisco',
+                }
+        ssh = netmiko.ConnectHandler(**DeviceInfo)
+        ssh.enable()
+        out = ssh.send_command("traceroute " + ip,delay_factor=1200,read_timeout=60000)
+
+        print(out)
+    except:
+        print("Trace Failed")
