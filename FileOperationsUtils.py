@@ -16,28 +16,24 @@ def loadInventoryFromFile(filename="inventory.json"):
     else:
         objectsList = []
     return objectsList.copy()
-def exportConfigsToCSV(devList: list[netDevice],inventoryFile: str):
-    configsSet = False
-    for dev in devList:
-        configsSet = not dev.config == ""
-    
-    if not configsSet:
-        print("No Configs In Inventory")
-        return
 
+
+
+
+
+def exportInfoToCSV(devList: list[netDevice],inventoryFile: str):
+    configsSet = False
 
     filePathParts = inventoryFile.split("\\")
     filePath = ""
-    if len(filePathParts) > 0:
-        for part in filePathParts[0:len(filePathParts - 1)]:
+    if len(filePathParts) > 1:
+        for part in filePathParts[0:len(filePathParts ) - 1]:
             filePath += part + "\\"
     filePath += "configs.csv"
     file = open(filePath,"w")
-    file.write("Hostname,ConfigurationText")
-    lines = [str]
+    file.write("Hostname,MAC,Type,Serial Number,OS,Number Of Interfaces,Up Time,Banner Text \n")
     for dev in devList:
-        line = dev.hostName + "," + dev.config
-        lines+= line
-    file.writelines(lines)
+        line = (dev.hostName.replace(",","") + "," + dev.macAddress.replace(",","") + "," + dev.deviceType + "," + dev.SerialNumber.replace(",","") + "," + dev.OS.replace(",","")  + "," + str(len(dev.ports))  + "," + dev.upTimeLastChecked.replace(",","") + "," + dev.banner.replace(",","").replace("\n","").replace("^C","") + "\n")
+        file.write(line)
     file.close
 

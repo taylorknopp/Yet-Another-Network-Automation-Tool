@@ -13,7 +13,7 @@ from SSHutilities import setHostname
 from SSHutilities import setConfig
 from SSHutilities import pingFromDev
 from SSHutilities import traceFromDev
-from FileOperationsUtils import exportConfigsToCSV
+from FileOperationsUtils import exportInfoToCSV
 import IpTools
 import socket
 import os
@@ -89,7 +89,7 @@ def backupConfigs():
     pass
 
 def extractConfigs():
-    exportConfigsToCSV(listOfDevices,inventoryFile)
+    exportInfoToCSV(listOfDevices,inventoryFile)
 
 def wipeConfigs():
     print("wipeConfigs")
@@ -283,7 +283,7 @@ A: Scan
 B: Build Inventory
 C: Configure static or Dynamic Routing on a L3 Device
 D: Grab Configurations 
-E: Extract configs from inventory to CSV
+E: Extract configs from inventory tol
 H: Set Device Hostname
 I: Configure IONterface On Device
 L: Load Inventory File

@@ -5,12 +5,17 @@ class netDevice():
     def __init__(self):
         self.managementAddress = "0.0.0.0"
         self.hostName = "Generic HostName"
-        self.config = "No Config"
+        self.config = ""
         self.dedicatedManagementPort = False
         self.Brand = "not set"
         self.deviceType = "not set"
         self.ports = []
         self.vlans = []
+        self.upTimeLastChecked = ""
+        self.OS = ""
+        self.SerialNumber = ""
+        self.banner = ""
+        self.macAddress = ""
     def printPortIps(self):
        for port in self.ports:
         print(port.name + " | " + port.ipAddress)

@@ -14,7 +14,7 @@ def netmikoSendCommandsToDevice(commands: list,Device : netDevice):
         pass
     
 
-def BuildInventoryOfDevicesInList(DeviceList):
+def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
     for CiscoDevice in DeviceList:
         try:
             DeviceInfo = {
@@ -27,8 +27,13 @@ def BuildInventoryOfDevicesInList(DeviceList):
             ssh = netmiko.ConnectHandler(**DeviceInfo)
             ssh.enable()
             Hostname = ssh.send_command('show run | sec hostname').split()[1]
+            try:
+                serailNumber = ssh.send_command('show run | sec license').split()[-1]
+            except:
+                pass
             CiscoDevice.hostName = Hostname
             interfaces = ssh.send_command("show ip interface brief",use_textfsm= True)
+            CiscoDevice.ports.clear()
             for port in interfaces:
                 interface = networkPort()
                 interface.name = port["intf"]
@@ -38,13 +43,28 @@ def BuildInventoryOfDevicesInList(DeviceList):
                 else:
                     interface.isUp = False
                 CiscoDevice.ports.append(interface)
+            versionInfo = ssh.send_command("show version")
+            versionInfoAsList = versionInfo.split("\n")
+            uptime = ""
+            systemOS = ""
+            Version = ""
+            serialNumber = ""
+            macAddress = ""
+            banner = ssh.send_command("show run | sec banner")
+            for line in versionInfoAsList:
+                if " uptime " in line:
+                    uptime = line.split()[1] + " " + line.split()[2] + " " + line.split()[3] + " " + line.split()[4] + " " + line.split()[5]
+                    continue
+                if "Cisco IOS" in line and not "rights" in line and not "Copyright" in line:
+                    systemOS = line   
+            CiscoDevice.upTimeLastChecked = uptime
+            CiscoDevice.OS = systemOS
+            CiscoDevice.SerialNumber = serailNumber
+            CiscoDevice.banner = banner
 
-                
 
-                
 
             
-            #print(ShowRun)
             print(Hostname)
             ssh.disconnect()
         except Exception as e:

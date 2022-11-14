@@ -18,7 +18,7 @@ def scan(subnet):
             subnet = netToUseFromUser
             break
         else:
-            print("Invlaid Input!")
+            print("Invalid Input!")
 
 
    
