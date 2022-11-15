@@ -14,9 +14,11 @@ from SSHutilities import setConfig
 from SSHutilities import pingFromDev
 from SSHutilities import traceFromDev
 from FileOperationsUtils import exportInfoToCSV
+from SSHutilities import updateDevice
 import IpTools
 import socket
 import os
+import copy
 
 
 
@@ -225,6 +227,12 @@ def configInt():
             print("Invalid Input!")
             continue
     configureInterface(devToUse)
+    updatetedDev = updateDevice(devToUse)
+    for i,dev in enumerate(listOfDevices):
+        if dev.managementAddress == updatetedDev.managementAddress:
+            listOfDevices[i] = copy.copy(updatetedDev)
+
+    
         
 def setHostnameOfDev():
     global listOfDevices
@@ -280,12 +288,12 @@ menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 
 
 menue = '''
 A: Scan
-B: Build Inventory
+B: Gather Device Info
 C: Configure static or Dynamic Routing on a L3 Device
 D: Grab Configurations 
-E: Extract configs from inventory tol
+E: Save Device Info To CSV
 H: Set Device Hostname
-I: Configure IONterface On Device
+I: Configure Interface On Device
 L: Load Inventory File
 S: Save Inventory File
 AC: Apply COnfig From Inventory
