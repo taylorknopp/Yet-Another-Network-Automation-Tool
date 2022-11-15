@@ -25,11 +25,13 @@ def updateDevice(CiscoDevice: netDevice):
         }
         ssh = netmiko.ConnectHandler(**DeviceInfo)
         ssh.enable()
+        serailNumber = ""
         Hostname = ssh.send_command('show run | sec hostname').split()[1]
         try:
             serailNumber = ssh.send_command('show run | sec license').split()[-1]
         except:
-            pass
+            if serialNumber == "":
+                    serialNumber = ssh.send_command("show version | sec Processor board").split()[3]
         CiscoDevice.hostName = Hostname
         interfaces = ssh.send_command("show ip interface brief",use_textfsm= True)
         CiscoDevice.ports.clear()
@@ -60,13 +62,13 @@ def updateDevice(CiscoDevice: netDevice):
         CiscoDevice.OS = systemOS
         CiscoDevice.SerialNumber = serailNumber
         CiscoDevice.banner = banner
+        ssh.disconnect()
         return CiscoDevice
 
 
 
         
-        print(Hostname)
-        ssh.disconnect()
+
     except Exception as e:
         print("Connection Failure For: " + CiscoDevice.managementAddress + " | " + str(e))
     
@@ -85,10 +87,13 @@ def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
             ssh = netmiko.ConnectHandler(**DeviceInfo)
             ssh.enable()
             Hostname = ssh.send_command('show run | sec hostname').split()[1]
+            serialNumber = ""
             try:
-                serailNumber = ssh.send_command('show run | sec license').split()[-1]
+                serialNumber = ssh.send_command('show run | sec license').split()[-1]
+                
             except:
-                pass
+                if serialNumber == "":
+                    serialNumber = ssh.send_command("show version | sec Processor board").split()[3]
             CiscoDevice.hostName = Hostname
             interfaces = ssh.send_command("show ip interface brief",use_textfsm= True)
             CiscoDevice.ports.clear()
@@ -106,7 +111,7 @@ def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
             uptime = ""
             systemOS = ""
             Version = ""
-            serialNumber = ""
+            
             macAddress = ""
             banner = ssh.send_command("show run | sec banner")
             for line in versionInfoAsList:
@@ -117,7 +122,7 @@ def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
                     systemOS = line   
             CiscoDevice.upTimeLastChecked = uptime
             CiscoDevice.OS = systemOS
-            CiscoDevice.SerialNumber = serailNumber
+            CiscoDevice.SerialNumber = serialNumber
             CiscoDevice.banner = banner
 
 

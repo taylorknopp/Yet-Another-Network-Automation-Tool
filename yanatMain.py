@@ -313,7 +313,7 @@ while True:
                 numPorts = len(dev.ports)
             except:
                 numPorts = 0
-            print(dev.managementAddress + " | " + dev.hostName + " | Number Of Interfaces: " + str(numPorts))
+            print(dev.managementAddress + " | " + dev.hostName + " | Number Of Interfaces: " + str(numPorts) + " | Serial Number: " + dev.SerialNumber)
     print("==============================================================================")
 
 
