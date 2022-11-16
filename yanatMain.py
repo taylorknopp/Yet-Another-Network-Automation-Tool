@@ -15,6 +15,7 @@ from SSHutilities import pingFromDev
 from SSHutilities import traceFromDev
 from FileOperationsUtils import exportInfoToCSV
 from SSHutilities import updateDevice
+from SSHutilities import configureEIGRP
 import IpTools
 import socket
 import os
@@ -82,8 +83,35 @@ def uploadConfigs():
     pass
 
 def configureRouting():
-    print("Config Routing")
-    pass
+    global listOfDevices
+    deviceMenu = "Devices:  \n"
+    for c,dev in enumerate(listOfDevices):
+        deviceMenu += str(c) + ". " + dev.hostName + "\n"
+    deviceMenu += "Chose a device: "
+    
+    devToUse = netDevice()
+    while True:
+        usrInput = input(deviceMenu)
+        if usrInput == "q":
+            return
+        try:
+            devToUse =  listOfDevices[int(usrInput)]
+            break
+        except:
+            print("Invalid Input!")
+            continue
+    while True:
+        usrInput = input("(S)tatic Route, (D)ynamic Route, or (Q)uit?: ").lower()
+        if usrInput == "s":
+            configStatic(devToUse)
+            break
+        elif usrInput == "d":
+            configureEIGRP(devToUse)
+            break
+        elif usrInput == "q":
+            return
+        else:
+            print("invalid input.")
 
 def backupConfigs():
     global listOfDevices
@@ -333,7 +361,6 @@ while True:
     else:
         print("Invaid Input")
         
-
 
 
 

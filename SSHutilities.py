@@ -332,3 +332,41 @@ def traceFromDev(dev:netDevice,ip):
         print(out)
     except:
         print("Trace Failed")
+
+def configureEIGRP(device : netDevice):
+    portToUse = []
+    portMenu = "interfaces: \n"
+   
+    
+    while True:
+        print("Selected ports/networks: ")
+        print("--------------------------------------------------------------------")
+        for port in portToUse:
+            print(port.name + " | " + port.ipAddress)
+        print("--------------------------------------------------------------------")
+
+        portMenu = ""
+        for c,port in enumerate(device.ports):
+
+            portMenu += str(c) + ". " + port.name + " | " + port.ipAddress +  "\n"
+        
+        portMenu += "Chose ports to include in EIGRP q to quit or d for done: "
+        
+        usrInput = input(portMenu)
+        if usrInput == "q":
+            return
+        if usrInput == "d" and len(portToUse) > 0:
+            break
+        elif usrInput == "d" and len(portToUse) <= 0:
+            print("must advertise at least one interface in EIGRP")
+            continue
+        try:
+            if not device.ports[int(usrInput)] in portToUse:
+                portToUse.append(device.ports[int(usrInput)])
+            else:
+                print("Port Already In List.")
+                break
+        except:
+            print("Invalid Input!")
+            continue
+    print(portToUse)
