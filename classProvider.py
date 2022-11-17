@@ -32,6 +32,7 @@ class networkPort():
         self.ipV6LinkLocaleAddress = "::0"
         self.IsTrunkPort = False
         self.AllowedVlans = []
+        self.mask = ""
 class vlanInterface():
     def __init__(self):
         self.ipAddress = "0.0.0.0"

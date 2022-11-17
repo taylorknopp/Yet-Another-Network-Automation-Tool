@@ -16,6 +16,7 @@ from SSHutilities import traceFromDev
 from FileOperationsUtils import exportInfoToCSV
 from SSHutilities import updateDevice
 from SSHutilities import configureEIGRP
+from SSHutilities import configStaticRouting
 import IpTools
 import socket
 import os
@@ -103,7 +104,7 @@ def configureRouting():
     while True:
         usrInput = input("(S)tatic Route, (D)ynamic Route, or (Q)uit?: ").lower()
         if usrInput == "s":
-            configStatic(devToUse)
+            configStaticRouting(devToUse)
             break
         elif usrInput == "d":
             configureEIGRP(devToUse)

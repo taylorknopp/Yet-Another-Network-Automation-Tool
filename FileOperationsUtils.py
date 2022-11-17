@@ -8,6 +8,9 @@ def saveToInventoryFile(ListOfDevicesToSaveInInventoryFile,filename="inventory.j
     f = open(filename, "w")
     f.write(listAsJson)
     f.close()
+
+
+    
 def loadInventoryFromFile(filename="inventory.json"):
     f = open(filename,"r")
     inventoryJson = f.read()

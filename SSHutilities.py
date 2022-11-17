@@ -101,6 +101,12 @@ def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
                 interface = networkPort()
                 interface.name = port["intf"]
                 interface.ipAddress = port["ipaddr"]
+                ipINfo = ssh.send_command("show run interface " + interface.name).split("\n")
+                for line in ipINfo:
+                    if "ip address" in line:
+                        interface.mask = line.split()[-1]
+                        break
+
                 if "up" in port["status"]:
                     interface.isUp = True
                 else:
@@ -149,12 +155,18 @@ def backupConfigsOfDevicesInList(DeviceList):
             }
             ssh = netmiko.ConnectHandler(**DeviceInfo)
             ssh.enable()
-            ShowRun = ssh.send_command('show run')
-            CiscoDevice.config = ShowRun
+            ShowRun = ssh.send_command('show run').split("\n")
+            splitLine = 0
+            for c,line in enumerate(ShowRun):
+                if "hostname" in line:
+                    splitLine = c
+                elif "secret" in line:
+                    ShowRun.pop(c)
+            CiscoDevice.config = ShowRun[splitLine:]
             Hostname = ssh.send_command('show run | sec hostname').split()[1]
             CiscoDevice.hostName = Hostname
             
-            #print(ShowRun)
+            
             print(Hostname)
             ssh.disconnect()
         except Exception as e:
@@ -350,7 +362,7 @@ def configureEIGRP(device : netDevice):
 
             portMenu += str(c) + ". " + port.name + " | " + port.ipAddress +  "\n"
         
-        portMenu += "Chose ports to include in EIGRP q to quit or d for done: "
+        portMenu += "Chose port networks to advertise in EIGRP q to quit or d for done: "
         
         usrInput = input(portMenu)
         if usrInput == "q":
@@ -358,7 +370,7 @@ def configureEIGRP(device : netDevice):
         if usrInput == "d" and len(portToUse) > 0:
             break
         elif usrInput == "d" and len(portToUse) <= 0:
-            print("must advertise at least one interface in EIGRP")
+            print("must advertise at least one network in EIGRP")
             continue
         try:
             if not device.ports[int(usrInput)] in portToUse:
@@ -369,4 +381,109 @@ def configureEIGRP(device : netDevice):
         except:
             print("Invalid Input!")
             continue
-    print(portToUse)
+
+    passivePorts = []
+    while True:
+        print("Selected ports/networks: ")
+        print("--------------------------------------------------------------------")
+        for port in passivePorts:
+            print(port.name + " | " + port.ipAddress)
+        print("--------------------------------------------------------------------")
+
+        portMenu = ""
+        for c,port in enumerate(device.ports):
+
+            portMenu += str(c) + ". " + port.name + " | " + port.ipAddress +  "\n"
+        
+        portMenu += "Chose passive ports q to quit or d for done: "
+        
+        usrInput = input(portMenu)
+        if usrInput == "q":
+            return
+        if usrInput == "d" and len(portToUse) > 0:
+            break
+        
+        try:
+            if not device.ports[int(usrInput)] in passivePorts:
+                passivePorts.append(device.ports[int(usrInput)])
+            else:
+                print("Port Already In List.")
+                break
+        except:
+            print("Invalid Input!")
+            continue
+
+
+    
+    
+    commandsToSend = []
+    commandsToSend.append("router eigrp 100")
+    for port in portToUse:
+        commandsToSend.append("network " + port.ipAddress)
+    for port in portToUse:
+        commandsToSend.append("passive-interface " + port.name)
+    DeviceInfo = {
+        'device_type': 'cisco_ios',
+        'ip': device.managementAddress,
+        'username': 'cisco',
+        'password': 'cisco',
+        'secret': 'cisco',
+        "fast_cli": False,
+        }
+    ssh = netmiko.ConnectHandler(**DeviceInfo)
+    ssh.enable()
+    ssh.config_mode()
+    routingOutput = ssh.send_multiline_timing(commandsToSend)
+    if len(routingOutput) > 0:
+        print(routingOutput)
+        input("continue?")
+    
+    
+    
+        
+def configStaticRouting(dev:netDevice):
+    destinationAddress = ""
+    destinationMask = ""
+    nextHpAddress = ""
+    while True:
+        usrInput = input("Destination Address or (Q)uit: ").lower()
+        if IpTools.validateIp(usrInput):
+            destinationAddress = usrInput
+            break
+        elif usrInput == "q":
+            return
+        else:
+            print("Invalid Input.")
+    while True:
+        usrInput = input("Destination Mask or (Q)uit: ").lower()
+        if IpTools.ValidateMask(usrInput) or usrInput == "0.0.0.0":
+            destinationMask = usrInput
+            break
+        elif usrInput == "q":
+            return
+        else:
+            print("Invalid Input.")
+    while True:
+        usrInput = input("Next Hop Address or (Q)uit: ").lower()
+        if IpTools.validateIp(usrInput):
+            nextHpAddress = usrInput
+            break
+        elif usrInput == "q":
+            return
+        else:
+            print("Invalid Input.")
+    DeviceInfo = {
+    'device_type': 'cisco_ios',
+    'ip': dev.managementAddress,
+    'username': 'cisco',
+    'password': 'cisco',
+    'secret': 'cisco',
+    "fast_cli": False,
+    }
+    ssh = netmiko.ConnectHandler(**DeviceInfo)
+    ssh.enable()
+    ssh.config_mode()
+    routingOutput = ssh.send_command("ip route " + destinationAddress + " " + destinationMask + " " + nextHpAddress)
+    if len(routingOutput) > 0:
+        print(routingOutput)
+        input("continue?")
