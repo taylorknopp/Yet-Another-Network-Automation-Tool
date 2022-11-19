@@ -16,6 +16,9 @@ class netDevice():
         self.SerialNumber = ""
         self.banner = ""
         self.macAddress = ""
+        self.username = ""
+        self.password = ""
+        self.secret = ""
     def printPortIps(self):
        for port in self.ports:
         print(port.name + " | " + port.ipAddress)

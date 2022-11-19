@@ -2,16 +2,7 @@ import netmiko
 from classProvider import netDevice
 from classProvider import networkPort
 import IpTools
-def netmikoSendCommandsToDevice(commands: list,Device : netDevice):
-    DeviceInfo = {
-            'device_type': Device.Brand,
-            'ip': Device.managementAddress,
-            'username': 'cisco',
-            'password': 'cisco',
-            'secret': 'cisco',
-            }
-    for command in commands:
-        pass
+
     
 
 def updateDevice(CiscoDevice: netDevice):
@@ -80,9 +71,9 @@ def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
             DeviceInfo = {
             'device_type': 'cisco_ios',
             'ip': CiscoDevice.managementAddress,
-            'username': 'cisco',
-            'password': 'cisco',
-            'secret': 'cisco',
+            'username': CiscoDevice.username,
+            'password': CiscoDevice.password,
+            'secret': CiscoDevice.secret,
             }
             ssh = netmiko.ConnectHandler(**DeviceInfo)
             ssh.enable()
@@ -142,16 +133,16 @@ def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
 
 
 
-def backupConfigsOfDevicesInList(DeviceList):
+def backupConfigsOfDevicesInList(DeviceList:list[netDevice]):
 
     for CiscoDevice in DeviceList:
         try:
             DeviceInfo = {
             'device_type': 'cisco_ios',
             'ip': CiscoDevice.managementAddress,
-            'username': 'cisco',
-            'password': 'cisco',
-            'secret': 'cisco',
+            'username': CiscoDevice.username,
+            'password': CiscoDevice.password,
+            'secret': CiscoDevice.secret,
             }
             ssh = netmiko.ConnectHandler(**DeviceInfo)
             ssh.enable()
@@ -173,15 +164,15 @@ def backupConfigsOfDevicesInList(DeviceList):
             print("Connection Failure For: " + CiscoDevice.managementAddress + " | " + str(e))
     return DeviceList
 
-def eraseAllDevices(DeviceList):
+def eraseAllDevices(DeviceList:list[netDevice]):
     for CiscoDevice in DeviceList:
         try:
             DeviceInfo = {
             'device_type': 'cisco_ios',
             'ip': CiscoDevice.managementAddress,
-            'username': 'cisco',
-            'password': 'cisco',
-            'secret': 'cisco',
+            'username': CiscoDevice.username,
+            'password': CiscoDevice.password,
+            'secret': CiscoDevice.secret,
             }
             print("Wiping " + CiscoDevice.managementAddress)
             ssh = netmiko.ConnectHandler(**DeviceInfo)
@@ -199,21 +190,17 @@ def checkIfDeviceIsCisco(managementAddress) -> bool:
     DeviceInfo = {
             'device_type': 'cisco_ios',
             'ip': managementAddress,
-            'username': 'cisco',
-            'password': 'cisco',
-            'secret': 'cisco',
             }
 
     
     try:
         ssh = netmiko.ConnectHandler(**DeviceInfo)
-        ssh.enable()
         ssh.disconnect()
         return True
     except:
         return False
 
-def configureInterface(device):
+def configureInterface(device:netDevice):
 
     portToUse = ""
     portMenu = "interfaces: \n"
@@ -261,9 +248,9 @@ def configureInterface(device):
         DeviceInfo = {
             'device_type': 'cisco_ios',
             'ip': device.managementAddress,
-            'username': 'cisco',
-            'password': 'cisco',
-            'secret': 'cisco',
+            'username': device.username,
+            'password': device.password,
+            'secret': device.secret,
             }
         ssh = netmiko.ConnectHandler(**DeviceInfo)
         commandsToSend = ["interface " + portToUse.name,"ip address " + ipAddress + " " + mask,"no shutdown","exit"]
@@ -291,9 +278,9 @@ def setHostname(device: netDevice):
     DeviceInfo = {
             'device_type': 'cisco_ios',
             'ip': device.managementAddress,
-            'username': 'cisco',
-            'password': 'cisco',
-            'secret': 'cisco',
+            'username': device.username,
+            'password': device.password,
+            'secret': device.secret,
             }
     ssh = netmiko.ConnectHandler(**DeviceInfo)
     ssh.enable()
@@ -304,9 +291,9 @@ def setConfig(configDevToSet: netDevice,ip):
     DeviceInfo = {
             'device_type': 'cisco_ios',
             'ip': ip,
-            'username': 'cisco',
-            'password': 'cisco',
-            'secret': 'cisco',
+            'username': configDevToSet.username,
+            'password': configDevToSet.password,
+            'secret': configDevToSet.secret,
             }
     ssh = netmiko.ConnectHandler(**DeviceInfo)
     ssh.enable()
@@ -318,9 +305,9 @@ def pingFromDev(dev:netDevice,ip):
     DeviceInfo = {
             'device_type': 'cisco_ios',
             'ip': dev.managementAddress,
-            'username': 'cisco',
-            'password': 'cisco',
-            'secret': 'cisco',
+            'username': dev.username,
+            'password': dev.password,
+            'secret': dev.secret,
             "fast_cli": False,
             }
     ssh = netmiko.ConnectHandler(**DeviceInfo)
@@ -333,9 +320,9 @@ def traceFromDev(dev:netDevice,ip):
         DeviceInfo = {
                 'device_type': 'cisco_ios',
                 'ip': dev.managementAddress,
-                'username': 'cisco',
-                'password': 'cisco',
-                'secret': 'cisco',
+                'username': dev.username,
+                'password': dev.password,
+                'secret': dev.secret,
                 }
         ssh = netmiko.ConnectHandler(**DeviceInfo)
         ssh.enable()
@@ -393,7 +380,9 @@ def configureEIGRP(device : netDevice):
         portMenu = ""
         for c,port in enumerate(device.ports):
 
-            portMenu += str(c) + ". " + port.name + " | " + port.ipAddress +  "\n"
+            if not port in portToUse:
+
+                portMenu += str(c) + ". " + port.name + " | " + port.ipAddress +  "\n"
         
         portMenu += "Chose passive ports q to quit or d for done: "
         
@@ -420,14 +409,15 @@ def configureEIGRP(device : netDevice):
     commandsToSend.append("router eigrp 100")
     for port in portToUse:
         commandsToSend.append("network " + port.ipAddress)
-    for port in portToUse:
+    for port in passivePorts:
         commandsToSend.append("passive-interface " + port.name)
+    commandsToSend.append("do wr")
     DeviceInfo = {
         'device_type': 'cisco_ios',
         'ip': device.managementAddress,
-        'username': 'cisco',
-        'password': 'cisco',
-        'secret': 'cisco',
+        'username': device.username,
+        'password': device.password,
+        'secret': device.secret,
         "fast_cli": False,
         }
     ssh = netmiko.ConnectHandler(**DeviceInfo)
@@ -475,9 +465,9 @@ def configStaticRouting(dev:netDevice):
     DeviceInfo = {
     'device_type': 'cisco_ios',
     'ip': dev.managementAddress,
-    'username': 'cisco',
-    'password': 'cisco',
-    'secret': 'cisco',
+    'username': dev.username,
+    'password': dev.password,
+    'secret': dev.secret,
     "fast_cli": False,
     }
     ssh = netmiko.ConnectHandler(**DeviceInfo)
@@ -487,3 +477,24 @@ def configStaticRouting(dev:netDevice):
     if len(routingOutput) > 0:
         print(routingOutput)
         input("continue?")
+
+def showEigrpNeighborsAlDev(devs:list[netDevice]):
+    for dev in devs:
+        DeviceInfo = {
+        'device_type': 'cisco_ios',
+        'ip': dev.managementAddress,
+        'username': dev.username,
+        'password': dev.password,
+        'secret': dev.secret,
+        "fast_cli": False,
+        }
+        ssh = netmiko.ConnectHandler(**DeviceInfo)
+        ssh.enable()
+        out = ssh.send_command("show ip eigrp neighbors")
+        print("Neighbors for " + dev.hostName + ": ")
+        print("-------------------------------------------------------------------------")
+        print(out)
+        print("-------------------------------------------------------------------------")
+        input("Enter for Next: ")
+
+

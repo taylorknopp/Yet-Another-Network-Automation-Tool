@@ -17,6 +17,7 @@ from FileOperationsUtils import exportInfoToCSV
 from SSHutilities import updateDevice
 from SSHutilities import configureEIGRP
 from SSHutilities import configStaticRouting
+from SSHutilities import showEigrpNeighborsAlDev
 import IpTools
 import socket
 import os
@@ -308,11 +309,14 @@ def applyConfigFromInventory():
             break
         print("Invalid IP")
     setConfig(devToUse,ipAddress)
+def neighborTbaleView():
+    global listOfDevices
+    showEigrpNeighborsAlDev(listOfDevices)
 
 
 
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
-'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory}
+'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTbaleView}
 
 
 menue = '''
@@ -326,6 +330,7 @@ I: Configure Interface On Device
 L: Load Inventory File
 S: Save Inventory File
 AC: Apply COnfig From Inventory
+NT: View Neighbor Tables for all Devices
 X: Wipe Configs And Reload
 Y: Connectivity Test, ping/trace(WARNING, can take a very long time)
 Q: Quit

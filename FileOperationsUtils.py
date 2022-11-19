@@ -14,10 +14,37 @@ def saveToInventoryFile(ListOfDevicesToSaveInInventoryFile,filename="inventory.j
 def loadInventoryFromFile(filename="inventory.json"):
     f = open(filename,"r")
     inventoryJson = f.read()
+    objectsList = list[netDevice]
     if not inventoryJson == "":
         objectsList = jsonpickle.decode(inventoryJson)
     else:
         objectsList = []
+    for dev in objectsList:
+        if dev.username == "" or dev.password == "" or dev.secret == "":
+            while True:
+                usrInput = input("username for " + dev.managementAddress + ": ")
+                if not usrInput == "":
+                    dev.username = usrInput
+                    break
+                else:
+                    print("Username cannot be blank.")
+                
+            while True:
+                usrInput = input("Password for " + dev.managementAddress + ": ")
+                if not usrInput == "":
+                    dev.password = usrInput
+                    break
+                else:
+                    print("Password cannot be blank.")
+            while True:
+                usrInput = input("Secret for " + dev.managementAddress + ": ")
+                if not usrInput == "":
+                    dev.secret = usrInput
+                    break
+                else:
+                    print("Secret cannot be blank.")
+
+
     return objectsList.copy()
 
 

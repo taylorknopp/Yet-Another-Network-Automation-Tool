@@ -30,8 +30,32 @@ def scan(subnet):
             if checkIfDeviceIsCisco(device_ip):
                 newDevice = netDevice()
                 newDevice.managementAddress = device_ip
+                print("Device found: " + device_ip)
+                while True:
+                    usrInput = input("username for " + device_ip + ": ")
+                    if not usrInput == "":
+                        newDevice.username = usrInput
+                        break
+                    else:
+                        print("Username cannot be blank.")
+                    
+                while True:
+                    usrInput = input("Password for " + device_ip + ": ")
+                    if not usrInput == "":
+                        newDevice.password = usrInput
+                        break
+                    else:
+                        print("Password cannot be blank.")
+                while True:
+                    usrInput = input("Secret for " + device_ip + ": ")
+                    if not usrInput == "":
+                        newDevice.secret = usrInput
+                        break
+                    else:
+                        print("Secret cannot be blank.")
+
                 list_of_devices.append(newDevice)
-                print ("device is up" ,device_ip) 
+                
         else:
                 print ("device is down" ,device_ip)
     return list_of_devices
