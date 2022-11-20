@@ -1,6 +1,6 @@
 
 
-
+#Class for storing device information of netowrk devices
 class netDevice():
     def __init__(self):
         self.managementAddress = "0.0.0.0"
@@ -22,7 +22,7 @@ class netDevice():
     def printPortIps(self):
        for port in self.ports:
         print(port.name + " | " + port.ipAddress)
-
+#class for storing information about netowrk port/intefaces that live on the "netDevice" class
 class networkPort():
     def __init__(self):
         self.speed = 1000
@@ -36,6 +36,7 @@ class networkPort():
         self.IsTrunkPort = False
         self.AllowedVlans = []
         self.mask = ""
+#class for storing information about vlans interface thugh cruently unused
 class vlanInterface():
     def __init__(self):
         self.ipAddress = "0.0.0.0"

@@ -33,7 +33,7 @@ CiderVSDecimalLookupDict = {
 "30":	"255.255.255.252",
 "31":	"255.255.255.254",
 "32":	"255.255.255.255" }
-
+#check the validity of an ip address with regex
 def validateIp(ip):
     try:
         regexParsedIp = re.fullmatch(r'^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$',ip) #regex string Source: Danail Gabenski | https://stackoverflow.com/questions/5284147/validating-ipv4-addresses-with-regexp
@@ -47,13 +47,14 @@ def validateIp(ip):
     else:
         #no errors have been cought so the IP should be valid and we should exit this loop and move on to the mask section
         return True
+#convert a cider mask to decimal
 def ciderToDecimal(cider):
     decimal = ""
     #try looking up the decimal for of the mask by the key that is the number of cider bits
     decimal = CiderVSDecimalLookupDict[cider.replace('/','')]
     #return the decimal value or a blank variable if no decimal was found
     return decimal
-
+#convert a decimal mask to cider
 def DecimalToCider(decimal):
     #count variable to look up cider key value
     count = 0
@@ -66,7 +67,7 @@ def DecimalToCider(decimal):
         #this iteration is not the correct value so increment the index counter
         count += 1
     return ""
-
+#check the validity of a subnet mask
 def ValidateMask(mask: str):
     if "/" in mask:
         if mask.replace('/','') in CiderVSDecimalLookupDict.keys():

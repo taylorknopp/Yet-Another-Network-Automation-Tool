@@ -1,3 +1,6 @@
+
+
+#importing all the custom functions fomr all the other files
 from classProvider import netDevice
 from classProvider import networkPort
 from classProvider import vlanInterface
@@ -19,6 +22,7 @@ from SSHutilities import configureEIGRP
 from SSHutilities import configStaticRouting
 from SSHutilities import showEigrpNeighborsAlDev
 import IpTools
+#importing third party and system libraries
 import socket
 import os
 import copy
@@ -27,16 +31,18 @@ import copy
 
     
 
-
+#global variables to be sued throughout the program, list of netowrk devcies and path for inventory json file. 
 listOfDevices = []
 inventoryFile = "inventory.json"
 
+#what follows is all the functions that are called by the suer input main function, all function ames should be fairly self explanitory. 
 
+#use the socket library to get hte ip of the host
 def getIpOfHost():
     hostname=socket.gethostname()   
     IPAddr=socket.gethostbyname(hostname)
     return IPAddr
-
+#Call the NetOperations scanning function
 def scanNet():
     network = "0.0.0.0"
     try:
@@ -54,14 +60,8 @@ def scanNet():
         listOfDevices = devices.copy()
     except Exception as e:
         print("Error scanning network! " + str(e))
-        return
-
-    
-            
-    
-        
-                
-
+        return        
+#call the sshUtils whipe devcies function
 def wipeDevices():
     userInput = input("Are you sure you want to wipe everything(Y to continue, anything else to abort)?: ").lower()
     try:
@@ -79,11 +79,7 @@ def wipeDevices():
         except Exception as e:
             print("Error Clearing Devices! " + str(e))
             return
-
-def uploadConfigs():
-    print("upload Config")
-    pass
-
+#call the sshUtils configure routing function based on user input about what devcie to configure and how
 def configureRouting():
     global listOfDevices
     deviceMenu = "Devices:  \n"
@@ -114,19 +110,15 @@ def configureRouting():
             return
         else:
             print("invalid input.")
-
+#call the sshUtils backup configs function
 def backupConfigs():
     global listOfDevices
     listOfDevices = backupConfigsOfDevicesInList(listOfDevices).copy()
     pass
-
+#call the file operations utils csv save function
 def extractConfigs():
     exportInfoToCSV(listOfDevices,inventoryFile)
-
-def wipeConfigs():
-    print("wipeConfigs")
-    pass
-
+#call the sshUtils ping/traceroute functions absed on user input abut what dev to use and what to do, ping vs traceroute
 def testConectivity():
     thingToDo = ""
     while True:
@@ -168,17 +160,14 @@ def testConectivity():
     elif thingToDo == "t":
         traceFromDev(devToUse,ipAddress)
     input("Continue?")
-
-
-
-
+#call the sshUtils information gathering function
 def BuildInventory():
     global listOfDevices
     try:
         listOfDevices = BuildInventoryOfDevicesInList(listOfDevices).copy()
     except Exception as e:
         print("Error Backing up configs! " + str(e))
-
+#call the file operations utils inverntory save function using the path goten fomr the suer or the default path
 def InventoryFileSetupAndSave():
     global inventoryFile
     while True:
@@ -198,9 +187,9 @@ def InventoryFileSetupAndSave():
             if usrInput != "" and os.path.exists(path):
                 inventoryFile = usrInput
                 break
-            elif userInput == "" and len(inventoryFile) > 0:
+            elif usrInput == "" and len(inventoryFile) > 0:
                 break
-            elif userInput == "" and len(inventoryFile) == 0:
+            elif usrInput == "" and len(inventoryFile) == 0:
                 print("File path/name cannot be blank")
             else:
                 print("Invalid Input")
@@ -218,7 +207,7 @@ def InventoryFileSetupAndSave():
           
     print(path)
     saveToInventoryFile(listOfDevices,inventoryFile)
-
+#call the file operations load inventory function
 def loadInventory():
     global inventoryFile
     global listOfDevices
@@ -228,7 +217,7 @@ def loadInventory():
         path = ""
         if usrInput == "" and os.path.exists(inventoryFile):
             break
-        elif userInput == "" and not os.path.exists(inventoryFile):
+        elif usrInput == "" and not os.path.exists(inventoryFile):
             print("Inventory file not found! ")
             continue
         elif os.path.exists(usrInput):
@@ -238,7 +227,7 @@ def loadInventory():
             print("Invalid input")
     
     listOfDevices = loadInventoryFromFile(inventoryFile)  
-
+#call the sshUtils configure inventory function
 def configInt():
     global listOfDevices
     deviceMenu = "Devices:  \n"
@@ -261,9 +250,7 @@ def configInt():
     for i,dev in enumerate(listOfDevices):
         if dev.managementAddress == updatetedDev.managementAddress:
             listOfDevices[i] = copy.copy(updatetedDev)
-
-    
-        
+#call the sshUtils set hostname function with information from the suer about what device to set and what hostname to use       
 def setHostnameOfDev():
     global listOfDevices
     deviceMenu = "Devices:  \n"
@@ -282,7 +269,7 @@ def setHostnameOfDev():
             print("Invalid Input!")
             continue
     setHostname(devToUse)
-
+#call the sshUtils set configs form inventory function to set the config of a device with teh config form the inventory
 def applyConfigFromInventory():
     global listOfDevices
     deviceMenu = "Devices:  \n"
@@ -302,23 +289,24 @@ def applyConfigFromInventory():
             continue
     ipAddress = ""
     while True:
-        ipAddress = input("Ip Address for Interface  or q to quit: ").lower()
+        ipAddress = input("Ip Address for device  or q to quit: ").lower()
         if ipAddress == "q":
             return
         elif IpTools.validateIp(ipAddress):
             break
         print("Invalid IP")
     setConfig(devToUse,ipAddress)
-def neighborTbaleView():
+#call the sshUtils neighbor table vie fucntion to viwe all devcies eigrp neigbor tables
+def neighborTableView():
     global listOfDevices
     showEigrpNeighborsAlDev(listOfDevices)
 
 
-
+#A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
-'e': extractConfigs, 'x':wipeConfigs,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTbaleView}
+'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView}
 
-
+#multiline string for the user input menu
 menue = '''
 A: Scan
 B: Gather Device Info
@@ -336,37 +324,40 @@ Y: Connectivity Test, ping/trace(WARNING, can take a very long time)
 Q: Quit
 What would you like to do?: '''
 
-
-while True:
-    
-    print("Inventory: " + inventoryFile)
-    print("Devices: ")
-    print("==============================================================================")
-    for dev in listOfDevices:
-            try:
-                numPorts = len(dev.ports)
-            except:
-                numPorts = 0
-            print(dev.managementAddress + " | " + dev.hostName + " | Number Of Interfaces: " + str(numPorts) + " | Serial Number: " + dev.SerialNumber)
-    print("==============================================================================")
-
-
-
-    userInput = input(menue).lower()
-    
-    #scan for devices, add them to the inventory file and backup there configs.
-    if(userInput in menueInputToFunctionMap.keys()):
+#Main user input function
+def main():
+    while True:
         
-        funcToCall = menueInputToFunctionMap[userInput]
-        funcToCall()
+        print("Inventory: " + inventoryFile)
+        print("Devices: ")
+        print("==============================================================================")
+        for dev in listOfDevices:
+                try:
+                    numPorts = len(dev.ports)
+                except:
+                    numPorts = 0
+                print(dev.managementAddress + " | " + dev.hostName + " | Number Of Interfaces: " + str(numPorts) + " | Serial Number: " + dev.SerialNumber)
+        print("==============================================================================")
+
+
+
+        userInput = input(menue).lower()
+        
+        #if the user input exists in the dictionary of possible menu functions, grab that fuinction reference and call it.
+        if(userInput in menueInputToFunctionMap.keys()):
+            
+            funcToCall = menueInputToFunctionMap[userInput]
+            funcToCall()
+            
+
+        #if user input is q quit    
+        elif userInput == "q":
+            break
+        else:
+            #user input is anything else, print invalid
+            print("Invaid Input")
         
 
-        
-    elif userInput == "q":
-        break
-    else:
-        print("Invaid Input")
-        
 
-
-
+#calling main
+main()

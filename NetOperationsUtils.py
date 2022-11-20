@@ -3,9 +3,10 @@ import os
 import IpTools
 from SSHutilities import checkIfDeviceIsCisco
 
-
+#scan for network devices, gather info aboutnthem fomr the user(username,password,secret) and store it on netDev class instances. 
+#Then taempt to ssh into those devices to ensure they are acutlly cisco devices before adding them to the amster device lsit
 def scan(subnet):
-    # print ('scan IPs')
+
     list_of_devices = []
 
     stringForInput = "Network to Scan or D for default( " + str(subnet) + "): "
@@ -27,32 +28,34 @@ def scan(subnet):
         print(device_ip)
         loss = os.system('ping -w 50 -n 1 ' + device_ip)
         if loss == 0:
-            if checkIfDeviceIsCisco(device_ip):
-                newDevice = netDevice()
-                newDevice.managementAddress = device_ip
-                print("Device found: " + device_ip)
-                while True:
-                    usrInput = input("username for " + device_ip + ": ")
-                    if not usrInput == "":
-                        newDevice.username = usrInput
-                        break
-                    else:
-                        print("Username cannot be blank.")
-                    
-                while True:
-                    usrInput = input("Password for " + device_ip + ": ")
-                    if not usrInput == "":
-                        newDevice.password = usrInput
-                        break
-                    else:
-                        print("Password cannot be blank.")
-                while True:
-                    usrInput = input("Secret for " + device_ip + ": ")
-                    if not usrInput == "":
-                        newDevice.secret = usrInput
-                        break
-                    else:
-                        print("Secret cannot be blank.")
+            newDevice = netDevice()
+            newDevice.managementAddress = device_ip
+            print("Device found: " + device_ip)
+            while True:
+                usrInput = input("username for " + device_ip + ": ")
+                if not usrInput == "":
+                    newDevice.username = usrInput
+                    break
+                else:
+                    print("Username cannot be blank.")
+                
+            while True:
+                usrInput = input("Password for " + device_ip + ": ")
+                if not usrInput == "":
+                    newDevice.password = usrInput
+                    break
+                else:
+                    print("Password cannot be blank.")
+            while True:
+                usrInput = input("Secret for " + device_ip + ": ")
+                if not usrInput == "":
+                    newDevice.secret = usrInput
+                    break
+                else:
+                    print("Secret cannot be blank.")
+
+            if checkIfDeviceIsCisco(device_ip,newDevice.username,newDevice.password):
+                
 
                 list_of_devices.append(newDevice)
                 

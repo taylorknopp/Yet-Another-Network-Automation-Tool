@@ -4,7 +4,7 @@ from classProvider import networkPort
 import IpTools
 
     
-
+#ssh into and update the info of a single entwork device
 def updateDevice(CiscoDevice: netDevice):
     try:
         DeviceInfo = {
@@ -64,7 +64,7 @@ def updateDevice(CiscoDevice: netDevice):
         print("Connection Failure For: " + CiscoDevice.managementAddress + " | " + str(e))
     
 
-
+#ssh into all the devices in the lsit and gather information about them to be saved in the inventory or exported to json
 def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
     for CiscoDevice in DeviceList:
         try:
@@ -132,7 +132,7 @@ def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
     return DeviceList
 
 
-
+#ssh into all devcies in the list and grab the entire running config, formated in an applyable manner for future restoration
 def backupConfigsOfDevicesInList(DeviceList:list[netDevice]):
 
     for CiscoDevice in DeviceList:
@@ -163,7 +163,7 @@ def backupConfigsOfDevicesInList(DeviceList:list[netDevice]):
         except Exception as e:
             print("Connection Failure For: " + CiscoDevice.managementAddress + " | " + str(e))
     return DeviceList
-
+#wipe all devcies in teh list. 
 def eraseAllDevices(DeviceList:list[netDevice]):
     for CiscoDevice in DeviceList:
         try:
@@ -185,11 +185,13 @@ def eraseAllDevices(DeviceList:list[netDevice]):
             print("Connection Failure For: " + CiscoDevice.managementAddress)
 
 
-
-def checkIfDeviceIsCisco(managementAddress) -> bool:
+#attempt to ssh into the devcie to check it is a cisco device with ssh enabled 
+def checkIfDeviceIsCisco(managementAddress,username,password) -> bool:
     DeviceInfo = {
             'device_type': 'cisco_ios',
             'ip': managementAddress,
+            'username': username,
+            'password': password,
             }
 
     
@@ -199,7 +201,7 @@ def checkIfDeviceIsCisco(managementAddress) -> bool:
         return True
     except:
         return False
-
+#ssh into a devcie and configure the apropriate interface
 def configureInterface(device:netDevice):
 
     portToUse = ""
@@ -265,7 +267,7 @@ def configureInterface(device:netDevice):
     except Exception as e:
         print(e)
         return False
-
+#ssh into a devcie and set it;s hostname
 def setHostname(device: netDevice):
     hostname = ""
     while True:
@@ -286,7 +288,7 @@ def setHostname(device: netDevice):
     ssh.enable()
     ssh.config_mode()
     ssh.send_command_timing("hostname " + hostname)
-
+#ssh into a device and apply the entire running config curently stored in the loaded inventory
 def setConfig(configDevToSet: netDevice,ip):
     DeviceInfo = {
             'device_type': 'cisco_ios',
@@ -300,7 +302,7 @@ def setConfig(configDevToSet: netDevice,ip):
     ssh.config_mode()
     configToSend = configDevToSet.config.split('\n')
     ssh.send_config_set(configToSend)
-    
+#ssh into a devcie and attempt to ping an address fomr that device    
 def pingFromDev(dev:netDevice,ip):
     DeviceInfo = {
             'device_type': 'cisco_ios',
@@ -314,7 +316,7 @@ def pingFromDev(dev:netDevice,ip):
     ssh.enable()
     out = ssh.send_command_timing("ping " + ip)
     print(out)
-
+#ssh into a devcie and attempt to traceroute an address fomr that device
 def traceFromDev(dev:netDevice,ip):
     try:
         DeviceInfo = {
@@ -331,7 +333,7 @@ def traceFromDev(dev:netDevice,ip):
         print(out)
     except:
         print("Trace Failed")
-
+#ssh into a device and apply a basic eigrp setup based on user input for encluded netowrks and passive interfaces.
 def configureEIGRP(device : netDevice):
     portToUse = []
     portMenu = "interfaces: \n"
@@ -430,7 +432,7 @@ def configureEIGRP(device : netDevice):
     
     
     
-        
+#ssh into a device and apply a static route based in user input        
 def configStaticRouting(dev:netDevice):
     destinationAddress = ""
     destinationMask = ""
@@ -477,7 +479,7 @@ def configStaticRouting(dev:netDevice):
     if len(routingOutput) > 0:
         print(routingOutput)
         input("continue?")
-
+#ssh into all devcies and show there eigrp neighbor tables
 def showEigrpNeighborsAlDev(devs:list[netDevice]):
     for dev in devs:
         DeviceInfo = {
