@@ -19,6 +19,7 @@ class netDevice():
         self.username = ""
         self.password = ""
         self.secret = ""
+        self.restconfAvailable = False
     def printPortIps(self):
        for port in self.ports:
         print(port.name + " | " + port.ipAddress)

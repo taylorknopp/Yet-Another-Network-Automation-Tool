@@ -26,8 +26,7 @@ import IpTools
 import socket
 import os
 import copy
-
-
+from tabulate import tabulate
 
     
 
@@ -327,17 +326,21 @@ What would you like to do?: '''
 #Main user input function
 def main():
     while True:
-        
+        headers = ["Address","Hostname","Interfaces","S/N","RestConf"]
+        table = []
         print("Inventory: " + inventoryFile)
         print("Devices: ")
-        print("==============================================================================")
+        #print("==============================================================================")
         for dev in listOfDevices:
                 try:
                     numPorts = len(dev.ports)
                 except:
                     numPorts = 0
-                print(dev.managementAddress + " | " + dev.hostName + " | Number Of Interfaces: " + str(numPorts) + " | Serial Number: " + dev.SerialNumber)
-        print("==============================================================================")
+                devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.SerialNumber,str(dev.restconfAvailable)]
+                table.append(devList.copy())
+                #print(dev.managementAddress + " | " + dev.hostName + " | Number Of Interfaces: " + str(numPorts) + " | Serial Number: " + dev.SerialNumber + " | RestConf Capable: " + str(dev.restconfAvailable))
+        #print("==============================================================================")
+        print(tabulate(table,headers,tablefmt="simple_grid"))
 
 
 
