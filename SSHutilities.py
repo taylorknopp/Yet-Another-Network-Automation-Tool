@@ -121,6 +121,15 @@ def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
             CiscoDevice.OS = systemOS
             CiscoDevice.SerialNumber = serialNumber
             CiscoDevice.banner = banner
+            ssh.config_mode()
+            try:
+                checkIfRestOut = ssh.send_command("restconf")
+                if "Invalid" in checkIfRestOut or len(checkIfRestOut) > 0:
+                    CiscoDevice.restconfAvailable = False
+                else:
+                    CiscoDevice.restconfAvailable = True
+            except:
+                CiscoDevice.restconfAvailable = False
 
 
 
