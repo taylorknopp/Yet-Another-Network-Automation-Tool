@@ -317,7 +317,7 @@ H: Set Device Hostname
 I: Configure Interface On Device
 L: Load Inventory File
 S: Save Inventory File
-AC: Apply COnfig From Inventory
+AC: Apply Config From Inventory
 NT: View Neighbor Tables for all Devices
 X: Wipe Configs And Reload
 Y: Connectivity Test, ping/trace(WARNING, can take a very long time)
