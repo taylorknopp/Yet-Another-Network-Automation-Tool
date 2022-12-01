@@ -1,5 +1,3 @@
-
-
 #importing all the custom functions fomr all the other files
 from classProvider import netDevice
 from classProvider import networkPort
@@ -330,7 +328,6 @@ def main():
         table = []
         print("Inventory: " + inventoryFile)
         print("Devices: ")
-        #print("==============================================================================")
         for dev in listOfDevices:
                 try:
                     numPorts = len(dev.ports)
@@ -338,8 +335,7 @@ def main():
                     numPorts = 0
                 devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.SerialNumber,str(dev.restconfAvailable)]
                 table.append(devList.copy())
-                #print(dev.managementAddress + " | " + dev.hostName + " | Number Of Interfaces: " + str(numPorts) + " | Serial Number: " + dev.SerialNumber + " | RestConf Capable: " + str(dev.restconfAvailable))
-        #print("==============================================================================")
+
         print(tabulate(table,headers,tablefmt="simple_grid"))
 
 
