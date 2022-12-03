@@ -67,3 +67,10 @@ def exportInfoToCSV(devList: list[netDevice],inventoryFile: str):
         file.write(line)
     file.close
 
+def SaveConfigs(ListOfDevicesToSaveInInventoryFile: list[netDevice]):
+    for device  in ListOfDevicesToSaveInInventoryFile:
+
+        f = open(device.hostName + str(".ios"), "w")
+        for line in device.config:
+            f.write(line + "\n")
+        f.close()

@@ -21,6 +21,7 @@ from SSHutilities import updateDevice
 from SSHutilities import configureEIGRP
 from SSHutilities import configStaticRouting
 from SSHutilities import showEigrpNeighborsAlDev
+from FileOperationsUtils import SaveConfigs
 import IpTools
 #importing third party and system libraries
 import socket
@@ -300,10 +301,14 @@ def neighborTableView():
     global listOfDevices
     showEigrpNeighborsAlDev(listOfDevices)
 
+def saveAllConfigs():
+    global listOfDevices
+    SaveConfigs(listOfDevices)
 
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
-'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView}
+'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs}
 
 #multiline string for the user input menu
 menue = '''
@@ -316,6 +321,7 @@ H: Set Device Hostname
 I: Configure Interface On Device
 L: Load Inventory File
 S: Save Inventory File
+sc: Save Configs as IOS Files
 AC: Apply Config From Inventory
 NT: View Neighbor Tables for all Devices
 X: Wipe Configs And Reload

@@ -1,0 +1,382 @@
+hostname RTR05
+!
+!
+vrf definition Mgmt-vrf
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+!
+no aaa new-model
+switch 1 provision c9300-24t
+!
+!
+!
+!
+ip routing
+!
+!
+!
+!
+!
+!
+!
+!
+login on-success log
+ipv6 unicast-routing
+!
+!
+!
+!
+!
+!
+!
+no device-tracking logging theft
+!
+crypto pki trustpoint SLA-TrustPoint
+ enrollment pkcs12
+ revocation-check crl
+!
+crypto pki trustpoint TP-self-signed-4165100041
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-4165100041
+ revocation-check none
+ rsakeypair TP-self-signed-4165100041
+!
+!
+crypto pki certificate chain SLA-TrustPoint
+ certificate ca 01
+  30820321 30820209 A0030201 02020101 300D0609 2A864886 F70D0101 0B050030 
+  32310E30 0C060355 040A1305 43697363 6F312030 1E060355 04031317 43697363 
+  6F204C69 63656E73 696E6720 526F6F74 20434130 1E170D31 33303533 30313934 
+  3834375A 170D3338 30353330 31393438 34375A30 32310E30 0C060355 040A1305 
+  43697363 6F312030 1E060355 04031317 43697363 6F204C69 63656E73 696E6720 
+  526F6F74 20434130 82012230 0D06092A 864886F7 0D010101 05000382 010F0030 
+  82010A02 82010100 A6BCBD96 131E05F7 145EA72C 2CD686E6 17222EA1 F1EFF64D 
+  CBB4C798 212AA147 C655D8D7 9471380D 8711441E 1AAF071A 9CAE6388 8A38E520 
+  1C394D78 462EF239 C659F715 B98C0A59 5BBB5CBD 0CFEBEA3 700A8BF7 D8F256EE 
+  4AA4E80D DB6FD1C9 60B1FD18 FFC69C96 6FA68957 A2617DE7 104FDC5F EA2956AC 
+  7390A3EB 2B5436AD C847A2C5 DAB553EB 69A9A535 58E9F3E3 C0BD23CF 58BD7188 
+  68E69491 20F320E7 948E71D7 AE3BCC84 F10684C7 4BC8E00F 539BA42B 42C68BB7 
+  C7479096 B4CB2D62 EA2F505D C7B062A4 6811D95B E8250FC4 5D5D5FB8 8F27D191 
+  C55F0D76 61F9A4CD 3D992327 A8BB03BD 4E6D7069 7CBADF8B DF5F4368 95135E44 
+  DFC7C6CF 04DD7FD1 02030100 01A34230 40300E06 03551D0F 0101FF04 04030201 
+  06300F06 03551D13 0101FF04 05300301 01FF301D 0603551D 0E041604 1449DC85 
+  4B3D31E5 1B3E6A17 606AF333 3D3B4C73 E8300D06 092A8648 86F70D01 010B0500 
+  03820101 00507F24 D3932A66 86025D9F E838AE5C 6D4DF6B0 49631C78 240DA905 
+  604EDCDE FF4FED2B 77FC460E CD636FDB DD44681E 3A5673AB 9093D3B1 6C9E3D8B 
+  D98987BF E40CBD9E 1AECA0C2 2189BB5C 8FA85686 CD98B646 5575B146 8DFC66A8 
+  467A3DF4 4D565700 6ADF0F0D CF835015 3C04FF7C 21E878AC 11BA9CD2 55A9232C 
+  7CA7B7E6 C1AF74F6 152E99B7 B1FCF9BB E973DE7F 5BDDEB86 C71E3B49 1765308B 
+  5FB0DA06 B92AFE7F 494E8A9E 07B85737 F3A58BE1 1A48A229 C37C1E69 39F08678 
+  80DDCD16 D6BACECA EEBC7CF9 8428787B 35202CDC 60E4616A B623CDBD 230E3AFB 
+  418616A9 4093E049 4D10AB75 27E86F73 932E35B5 8862FDAE 0275156F 719BB2F0 
+  D697DF7F 28
+  	quit
+crypto pki certificate chain TP-self-signed-4165100041
+ certificate self-signed 01
+  30820330 30820218 A0030201 02020101 300D0609 2A864886 F70D0101 05050030 
+  31312F30 2D060355 04031326 494F532D 53656C66 2D536967 6E65642D 43657274 
+  69666963 6174652D 34313635 31303030 3431301E 170D3232 31323032 31373335 
+  31315A17 0D333231 32303131 37333531 315A3031 312F302D 06035504 03132649 
+  4F532D53 656C662D 5369676E 65642D43 65727469 66696361 74652D34 31363531 
+  30303034 31308201 22300D06 092A8648 86F70D01 01010500 0382010F 00308201 
+  0A028201 0100AB16 DDE4A52F 7370A112 372981C6 7F6E77A7 34E40ECC 949AB48B 
+  453B16F9 9D27479B 601634AF 0B9101E1 877D6695 438DCEF0 9066518E 1FD2AF1E 
+  A26459EA A110FA66 34DB35F9 9E50AAA7 4C3BBC54 C7160CBD DC1B9A0B 98BD4700 
+  F2D12648 0E7AED45 36BF319A 7A1492D8 E4399FEA 83740792 61D9899F 659E92A2 
+  4192D736 B76EC207 914BC6C1 4CA1BB3C 61D01C9F BA722D5D 6544F112 0A61F770 
+  B0678C93 C4D1E08F 0BC00EFF 06232F15 80777FE5 9B1D1453 3184A781 77E445A3 
+  7DDC3AED 6E531F7C 7B262AB8 68EE1FC5 48903C5F BFFC90F9 B574C9F6 1E3D3D28 
+  E0D986FE 6C835294 614B151B 8E73C9F5 2720CB05 BC304966 FBA2EE8F 78A73659 
+  3C8D2FF2 9D9B0203 010001A3 53305130 0F060355 1D130101 FF040530 030101FF 
+  301F0603 551D2304 18301680 14CC30A2 0767E841 9CB22D5C 41924670 C5254C31 
+  40301D06 03551D0E 04160414 CC30A207 67E8419C B22D5C41 924670C5 254C3140 
+  300D0609 2A864886 F70D0101 05050003 82010100 3C00179E FEC63064 8B221409 
+  9953497D 0D329EFE BF0589BF 09246BD3 5DCCBE95 D49AB40D 643680F0 3A8E6C1C 
+  E4F48994 483E86EE 31047B09 9252F973 51698A36 C7ED43D9 65574F9E A076C762 
+  56F392A0 77161E35 CFE1A843 D134B947 AA06055F FCF74348 0B0AFF74 F53AA813 
+  2FA41148 D422458E 3D6B2156 313CE24A D49D7FA8 BEE5D209 E27390AE 06C35B51 
+  C988242A 0DD909B4 A163E7FC 1A9A3A0D 5DA0D320 C9819499 1764E73B 699B16AF 
+  950AFB57 E247B457 362F4345 C2093AD8 3FD8B5DC 6C24269D 953999AA 888245D3 
+  945D5DC7 C13C14BA D4BBE9C0 6CB663CE 533BABEA CD9CA5EC F0D21E9F 974C0ED7 
+  AC1B8751 A4BC6A07 BF760533 1DF008B6 BFE5B8CF
+  	quit
+!
+!
+license boot level network-advantage addon dna-advantage
+!
+!
+diagnostic bootup level minimal
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+memory free low-watermark processor 133138
+!
+username cisco password 0 cisco
+!
+redundancy
+ mode sso
+!
+!
+!
+!
+!
+!
+transceiver type all
+ monitoring
+!
+!
+class-map match-any system-cpp-police-ewlc-control
+  description EWLC Control 
+class-map match-any system-cpp-police-topology-control
+  description Topology control
+class-map match-any system-cpp-police-sw-forward
+  description Sw forwarding, L2 LVX data packets, LOGGING, Transit Traffic
+class-map match-any system-cpp-default
+  description EWLC Data, Inter FED Traffic 
+class-map match-any system-cpp-police-sys-data
+  description Openflow, Exception, EGR Exception, NFL Sampled Data, RPF Failed
+class-map match-any system-cpp-police-punt-webauth
+  description Punt Webauth
+class-map match-any system-cpp-police-l2lvx-control
+  description L2 LVX control packets
+class-map match-any system-cpp-police-forus
+  description Forus Address resolution and Forus traffic
+class-map match-any system-cpp-police-multicast-end-station
+  description MCAST END STATION
+class-map match-any system-cpp-police-high-rate-app
+  description High Rate Applications 
+class-map match-any system-cpp-police-multicast
+  description MCAST Data
+class-map match-any system-cpp-police-l2-control
+  description L2 control
+class-map match-any system-cpp-police-dot1x-auth
+  description DOT1X Auth
+class-map match-any system-cpp-police-data
+  description ICMP redirect, ICMP_GEN and BROADCAST
+class-map match-any system-cpp-police-stackwise-virt-control
+  description Stackwise Virtual OOB
+class-map match-any non-client-nrt-class
+class-map match-any system-cpp-police-routing-control
+  description Routing control and Low Latency
+class-map match-any system-cpp-police-protocol-snooping
+  description Protocol snooping
+class-map match-any system-cpp-police-dhcp-snooping
+  description DHCP snooping
+class-map match-any system-cpp-police-ios-routing
+  description L2 control, Topology control, Routing control, Low Latency
+class-map match-any system-cpp-police-system-critical
+  description System Critical and Gold Pkt
+class-map match-any system-cpp-police-ios-feature
+  description ICMPGEN,BROADCAST,ICMP,L2LVXCntrl,ProtoSnoop,PuntWebauth,MCASTData,Transit,DOT1XAuth,Swfwd,LOGGING,L2LVXData,ForusTraffic,ForusARP,McastEndStn,Openflow,Exception,EGRExcption,NflSampled,RpfFailed
+!
+policy-map system-cpp-policy
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 172.16.5.1 255.255.255.255
+ ipv6 address 2021:BA15:DAD:5::1/64
+ ipv6 enable
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+interface GigabitEthernet0/0
+ description To MGMT F5
+ vrf forwarding Mgmt-vrf
+ ip address 10.0.20.5 255.255.255.0
+ negotiation auto
+ ipv6 address FE80::5 link-local
+ ipv6 address 2001:DB8:CAFE:20::5/64
+ ipv6 enable
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+interface GigabitEthernet1/0/1
+ description To RTR04 G1/0/1
+ no switchport
+ ip address 10.0.45.5 255.255.255.0
+ ipv6 address FE80::5 link-local
+ ipv6 address 2001:DB8:CAFE:45::5/64
+ ipv6 enable
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+interface GigabitEthernet1/0/2
+ description To RTR03 G0/0/1
+ no switchport
+ ip address 10.0.35.5 255.255.255.0
+ ipv6 address FE80::5 link-local
+ ipv6 address 2001:DB8:CAFE:35::5/64
+ ipv6 enable
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+interface GigabitEthernet1/0/3
+!
+interface GigabitEthernet1/0/4
+!
+interface GigabitEthernet1/0/5
+!
+interface GigabitEthernet1/0/6
+!
+interface GigabitEthernet1/0/7
+!
+interface GigabitEthernet1/0/8
+!
+interface GigabitEthernet1/0/9
+!
+interface GigabitEthernet1/0/10
+!
+interface GigabitEthernet1/0/11
+!
+interface GigabitEthernet1/0/12
+!
+interface GigabitEthernet1/0/13
+!
+interface GigabitEthernet1/0/14
+!
+interface GigabitEthernet1/0/15
+!
+interface GigabitEthernet1/0/16
+!
+interface GigabitEthernet1/0/17
+!
+interface GigabitEthernet1/0/18
+!
+interface GigabitEthernet1/0/19
+!
+interface GigabitEthernet1/0/20
+!
+interface GigabitEthernet1/0/21
+!
+interface GigabitEthernet1/0/22
+!
+interface GigabitEthernet1/0/23
+!
+interface GigabitEthernet1/0/24
+ description To Client1 Host 1-DC02
+ no switchport
+ ip address 10.0.110.1 255.255.255.0
+ ipv6 address FE80::5 link-local
+ ipv6 address 2001:DB8:CAFE:110::1/64
+ ipv6 enable
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+interface GigabitEthernet1/1/1
+!
+interface GigabitEthernet1/1/2
+!
+interface GigabitEthernet1/1/3
+!
+interface GigabitEthernet1/1/4
+!
+interface TenGigabitEthernet1/1/1
+!
+interface TenGigabitEthernet1/1/2
+!
+interface TenGigabitEthernet1/1/3
+!
+interface TenGigabitEthernet1/1/4
+!
+interface TenGigabitEthernet1/1/5
+!
+interface TenGigabitEthernet1/1/6
+!
+interface TenGigabitEthernet1/1/7
+!
+interface TenGigabitEthernet1/1/8
+!
+interface FortyGigabitEthernet1/1/1
+!
+interface FortyGigabitEthernet1/1/2
+!
+interface TwentyFiveGigE1/1/1
+!
+interface TwentyFiveGigE1/1/2
+!
+interface AppGigabitEthernet1/0/1
+!
+interface Vlan1
+ no ip address
+!
+router ospfv3 1
+ !
+ address-family ipv4 unicast
+  passive-interface Loopback0
+  router-id 192.168.4.5
+ exit-address-family
+ !
+ address-family ipv6 unicast
+  passive-interface Loopback0
+  router-id 192.168.6.5
+ exit-address-family
+ !
+ address-family ipv4 unicast vrf Mgmt-vrf
+ exit-address-family
+ !
+ address-family ipv6 unicast vrf Mgmt-vrf
+ exit-address-family
+!
+ip forward-protocol nd
+ip http server
+ip http authentication local
+ip http secure-server
+ip ssh version 2
+!
+!
+!
+ip access-list standard 99
+ 10 permit 10.0.20.100
+!
+!
+snmp-server community admin RW 99
+snmp-server host 10.0.20.100 admim 
+!
+control-plane
+ service-policy input system-cpp-policy
+!
+!
+line con 0
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login local
+ transport input ssh
+line vty 5 15
+ login local
+ transport input ssh
+line vty 16 31
+ login
+ transport input ssh
+!
+call-home
+ ! If contact email address in call-home is configured as sch-smart-licensing@cisco.com
+ ! the email address configured in Cisco Smart License Portal will be used as contact email address to send SCH notifications.
+ contact-email-addr sch-smart-licensing@cisco.com
+ profile "CiscoTAC-1"
+  active
+  destination transport-method http
+!
+!
+!
+!
+!
+!
+restconf
+end
+

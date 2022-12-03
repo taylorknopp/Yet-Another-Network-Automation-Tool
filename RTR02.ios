@@ -1,0 +1,203 @@
+hostname RTR02
+!
+boot-start-marker
+boot-end-marker
+!
+!
+vrf definition Mgmt-intf
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+!
+no aaa new-model
+!
+ip domain name netw3000.lab4
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+subscriber templating
+! 
+! 
+! 
+! 
+vtp domain cisco
+vtp mode transparent
+!
+ipv6 unicast-routing
+!
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+license udi pid ISR4321/K9 sn FDO20080XQY
+no license smart enable
+diagnostic bootup level minimal
+!
+spanning-tree extend system-id
+!
+netconf-yang cisco-odm actions OSPF
+netconf-yang cisco-odm actions IPRoute
+netconf-yang cisco-odm actions BFDNeighbors
+netconf-yang cisco-odm actions BridgeDomain
+netconf-yang cisco-odm actions VirtualService
+netconf-yang cisco-odm actions MPLSLDPNeighbors
+netconf-yang cisco-odm actions MPLSStaticBinding
+netconf-yang cisco-odm actions MPLSForwardingTable
+!
+restconf
+!
+username cisco password 0 cisco
+!
+redundancy
+ mode none
+!
+!
+!
+!
+!
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+! 
+! 
+!
+!
+interface Loopback0
+ ip address 172.16.2.1 255.255.255.255
+ ipv6 address 2021:BA15:DAD:2::1/64
+ ipv6 enable
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+interface GigabitEthernet0/0/0
+ description To RTR01 G0/1
+ ip address 10.0.12.2 255.255.255.0
+ negotiation auto
+ ipv6 address FE80::2 link-local
+ ipv6 address 2001:DB8:CAFE:12::2/64
+ ipv6 enable
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+interface GigabitEthernet0/0/1
+ description To RTR04 G1/0/2
+ ip address 10.0.24.2 255.255.255.0
+ negotiation auto
+ ipv6 address FE80::2 link-local
+ ipv6 address 2001:DB8:CAFE:24::2/64
+ ipv6 enable
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+interface GigabitEthernet0/1/0
+ description To RTR03 G0/1/0
+ ip address 10.0.23.2 255.255.255.0
+ negotiation auto
+ ipv6 address FE80::2 link-local
+ ipv6 address 2001:DB8:CAFE:23::2/64
+ ipv6 enable
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+interface GigabitEthernet0/1/1
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0
+ description To MGMT F2
+ vrf forwarding Mgmt-intf
+ ip address 10.0.20.2 255.255.255.0
+ negotiation auto
+ ipv6 address FE80::2 link-local
+ ipv6 address 2001:DB8:CAFE:20::2/64
+ ipv6 enable
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+router ospfv3 1
+ !
+ address-family ipv4 unicast
+  passive-interface Loopback0
+  router-id 192.168.4.2
+ exit-address-family
+ !
+ address-family ipv6 unicast
+  passive-interface Loopback0
+  router-id 192.168.6.2
+ exit-address-family
+ !
+ address-family ipv4 unicast vrf Mgmt-intf
+ exit-address-family
+ !
+ address-family ipv6 unicast vrf Mgmt-intf
+ exit-address-family
+!
+ip forward-protocol nd
+ip http server
+ip http authentication local
+ip http secure-server
+ip tftp source-interface GigabitEthernet0
+!
+ip ssh version 2
+!
+access-list 99 permit 10.0.20.100
+!
+!
+snmp-server community admin RW 99
+snmp-server host 10.0.20.100 admim 
+!
+!
+control-plane
+!
+!
+line con 0
+ logging synchronous
+ transport input none
+ stopbits 1
+line aux 0
+ stopbits 1
+line vty 0 4
+ login local
+ transport input ssh
+line vty 5 15
+ login local
+ transport input ssh
+!
+wsma agent exec
+!
+wsma agent config
+!
+wsma agent filesys
+!
+wsma agent notify
+!
+!
+end
+
