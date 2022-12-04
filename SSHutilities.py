@@ -128,6 +128,7 @@ def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
                     CiscoDevice.restconfAvailable = False
                 else:
                     CiscoDevice.restconfAvailable = True
+                    ssh.send_command("no restconf")
             except:
                 CiscoDevice.restconfAvailable = False
 

@@ -327,6 +327,17 @@ Y: Connectivity Test, ping/trace(WARNING, can take a very long time)
 Q: Quit
 What would you like to do?: '''
 
+MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
+["B: "," Gather Device Info","sc: "," Save Configs as IOS Files"],
+["C: "," Configure static or Dynamic Routing on a L3 Device","AC: "," Apply Config From Inventory"],
+["D: "," Grab Configurations ","NT: "," View Neighbor Tables for all Devices"],
+["E: "," Save Device Info To CSV","LC: ", "Load Devices From CSV"],
+["H: "," Set Device Hostname","X: "," Wipe Configs And Reload"],
+["I: "," Configure Interface On Device","Y: "," Connectivity Test, ping/trace(WARNING, can take a very long time)"],
+["L: "," Load Inventory File","Q: "," Quit"]]
+
+
+
 #Main user input function
 def main():
     while True:
@@ -341,12 +352,14 @@ def main():
                     numPorts = 0
                 devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.SerialNumber,str(dev.restconfAvailable)]
                 table.append(devList.copy())
-
+        width = os.get_terminal_size().columns
+        print("=" * width)
         print(tabulate(table,headers,tablefmt="simple_grid"))
+        print("=" * width)
+        print(tabulate(MenueTableList,tablefmt="simple"))
 
 
-
-        userInput = input(menue).lower()
+        userInput = input("What would you like to do?: ").lower()
         
         #if the user input exists in the dictionary of possible menu functions, grab that fuinction reference and call it.
         if(userInput in menueInputToFunctionMap.keys()):
