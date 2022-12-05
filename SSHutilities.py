@@ -553,8 +553,10 @@ def rPingFromDevs(devs:list[netDevice]):
                     ssh.enable()
                     out = ssh.send_command_timing("ping " + interface.ipAddress)
                     outList = out.split('\n')
+                    
                 
                     thisPortsRown.append(outList[2])
+                    ssh.disconnect()
                 except Exception as e:
                     print("Something Went Wrong: " + str(e))
                     thisPortsRown.append("Error")
