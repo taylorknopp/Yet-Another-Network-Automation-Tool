@@ -32,7 +32,7 @@ class networkPort():
         self.isUp = False
         self.isSwitchPort = True
         self.type = "ethernet"
-        self.ipAddress = "0.0.0.0 0.0.0.0"
+        self.ipAddress = ""
         self.ipV6Address = "::0"
         self.ipV6LinkLocaleAddress = "::0"
         self.IsTrunkPort = False

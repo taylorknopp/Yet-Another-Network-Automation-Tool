@@ -5,6 +5,7 @@ import IpTools
 # import the requests library
 import requests
 import json
+from tabulate import tabulate
     
 #ssh into and update the info of a single entwork device
 def updateDevice(CiscoDevice: netDevice):
@@ -67,7 +68,7 @@ def updateDevice(CiscoDevice: netDevice):
         requests.packages.urllib3.disable_warnings()
 
         # Define module and host
-        module = 'ietf-netconf-monitoring:capabilities'
+        module = 'ietf-yang-library:modules-state'
         host = CiscoDevice.managementAddress
 
         # Define URL
@@ -87,17 +88,21 @@ def updateDevice(CiscoDevice: netDevice):
         
 
         if not response.status_code == 200:
+            
             CiscoDevice.restconfEnabledAndWorking = False
-            ssh.config_mode()
-            try:
-                checkIfRestOut = ssh.send_command("restconf")
-                if "Invalid" in checkIfRestOut or len(checkIfRestOut) > 0:
+            if "restconf" in CiscoDevice.config:
+                CiscoDevice.restconfAvailable = True
+            else:
+                ssh.config_mode()
+                try:
+                    checkIfRestOut = ssh.send_command("restconf")
+                    if "Invalid" in checkIfRestOut or len(checkIfRestOut) > 0:
+                        CiscoDevice.restconfAvailable = False
+                    else:
+                        CiscoDevice.restconfAvailable = True
+                        ssh.send_command("no restconf")
+                except:
                     CiscoDevice.restconfAvailable = False
-                else:
-                    CiscoDevice.restconfAvailable = True
-                    ssh.send_command("no restconf")
-            except:
-                CiscoDevice.restconfAvailable = False
         else:
             CiscoDevice.restconfAvailable = True
             CiscoDevice.restconfEnabledAndWorking = True
@@ -516,3 +521,43 @@ def testRestConf(CiscoDevice: netDevice):
 
         modules = json.loads(response.content)
         print(modules)
+
+def rPingFromDevs(devs:list[netDevice]):
+
+    headers = [" "]
+    pings = []
+    for dev in devs:
+        headers.append(dev.hostName)
+        
+        for interface in dev.ports:
+            if interface.ipAddress == "unassigned":
+                continue
+            thisPortsRown = []
+            thisPortsRown.append(dev.hostName + " | " + interface.name + " " + interface.ipAddress)
+            
+
+            
+            for dev2 in devs:
+                if dev2 == dev:
+                    continue 
+                DeviceInfo = {
+                        'device_type': 'cisco_ios',
+                        'ip': dev2.managementAddress,
+                        'username': dev2.username,
+                        'password': dev2.password,
+                        'secret': dev2.secret,
+                        "fast_cli": False,
+                        }
+                try:
+                    ssh = netmiko.ConnectHandler(**DeviceInfo)
+                    ssh.enable()
+                    out = ssh.send_command_timing("ping " + interface.ipAddress)
+                    outList = out.split('\n')
+                
+                    thisPortsRown.append(outList[2])
+                except Exception as e:
+                    print("Something Went Wrong: " + str(e))
+                    thisPortsRown.append("Error")
+                print(dev2.hostName + " -> " + dev.hostName + ": " + interface.name)
+            pings.append(thisPortsRown)
+    print(tabulate(pings,headers,tablefmt="simple_grid"))

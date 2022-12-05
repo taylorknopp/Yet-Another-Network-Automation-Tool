@@ -22,11 +22,13 @@ from SSHutilities import showEigrpNeighborsAlDev
 from FileOperationsUtils import SaveConfigs
 from SSHutilities import testRestConf
 import IpTools
+from SSHutilities import rPingFromDevs
 #importing third party and system libraries
 import socket
 import os
 import copy
 from tabulate import tabulate
+
 
     
 
@@ -323,12 +325,15 @@ def testRest():
             continue
     testRestConf(devToUse)
     input("continue?")
+def rPing():
+    global listOfDevices
+    rPingFromDevs(listOfDevices)
+    input("continue?")
 
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'t':testRest}
-
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'t':testRest,'r':rPing}
 #multiline string for the user input menu
 menue = '''
 A: Scan
@@ -355,7 +360,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["E: "," Save Device Info To CSV","LC: ", "Load Devices From CSV"],
 ["H: "," Set Device Hostname","X: "," Wipe Configs And Reload"],
 ["I: "," Configure Interface On Device","Y: "," Connectivity Test, ping/trace(WARNING, can take a very long time)"],
-["T: ","Test Rest Conf Config","R: ", "Not Yet Implemented"],
+["T: ","Test Rest Conf Config","R: ", "Ping Everything from Everywhere"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 
