@@ -2,7 +2,9 @@ import netmiko
 from classProvider import netDevice
 from classProvider import networkPort
 import IpTools
-
+# import the requests library
+import requests
+import json
     
 #ssh into and update the info of a single entwork device
 def updateDevice(CiscoDevice: netDevice):
@@ -10,19 +12,20 @@ def updateDevice(CiscoDevice: netDevice):
         DeviceInfo = {
         'device_type': 'cisco_ios',
         'ip': CiscoDevice.managementAddress,
-        'username': 'cisco',
-        'password': 'cisco',
-        'secret': 'cisco',
+        'username': CiscoDevice.username,
+        'password': CiscoDevice.password,
+        'secret': CiscoDevice.secret,
         }
         ssh = netmiko.ConnectHandler(**DeviceInfo)
         ssh.enable()
-        serailNumber = ""
         Hostname = ssh.send_command('show run | sec hostname').split()[1]
+        serialNumber = ""
         try:
-            serailNumber = ssh.send_command('show run | sec license').split()[-1]
+            serialNumber = ssh.send_command('show run | sec license').split()[-1]
+            
         except:
             if serialNumber == "":
-                    serialNumber = ssh.send_command("show version | sec Processor board").split()[3]
+                serialNumber = ssh.send_command("show version | sec Processor board").split()[3]
         CiscoDevice.hostName = Hostname
         interfaces = ssh.send_command("show ip interface brief",use_textfsm= True)
         CiscoDevice.ports.clear()
@@ -30,6 +33,12 @@ def updateDevice(CiscoDevice: netDevice):
             interface = networkPort()
             interface.name = port["intf"]
             interface.ipAddress = port["ipaddr"]
+            ipINfo = ssh.send_command("show run interface " + interface.name).split("\n")
+            for line in ipINfo:
+                if "ip address" in line:
+                    interface.mask = line.split()[-1]
+                    break
+
             if "up" in port["status"]:
                 interface.isUp = True
             else:
@@ -40,7 +49,7 @@ def updateDevice(CiscoDevice: netDevice):
         uptime = ""
         systemOS = ""
         Version = ""
-        serialNumber = ""
+        
         macAddress = ""
         banner = ssh.send_command("show run | sec banner")
         for line in versionInfoAsList:
@@ -51,76 +60,34 @@ def updateDevice(CiscoDevice: netDevice):
                 systemOS = line   
         CiscoDevice.upTimeLastChecked = uptime
         CiscoDevice.OS = systemOS
-        CiscoDevice.SerialNumber = serailNumber
+        CiscoDevice.SerialNumber = serialNumber
         CiscoDevice.banner = banner
-        ssh.disconnect()
-        return CiscoDevice
+
+        # disable warnings from SSL/TLS certificates
+        requests.packages.urllib3.disable_warnings()
+
+        # Define module and host
+        module = 'ietf-netconf-monitoring:capabilities'
+        host = CiscoDevice.managementAddress
+
+        # Define URL
+        url = f"https://{host}/restconf/data/{module}"
+        uname = CiscoDevice.username
+        password = CiscoDevice.password
 
 
 
+        # Form header information
+        headers = {'Content-Type': 'application/yang-data+json',
+                'Accept': 'application/yang-data+json'}
+
+
+        # Performs a GET on the gevin url
+        response = requests.get(url, headers=headers, verify=False,auth=(uname,password))
         
 
-    except Exception as e:
-        print("Connection Failure For: " + CiscoDevice.managementAddress + " | " + str(e))
-    
-
-#ssh into all the devices in the lsit and gather information about them to be saved in the inventory or exported to json
-def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
-    for CiscoDevice in DeviceList:
-        try:
-            DeviceInfo = {
-            'device_type': 'cisco_ios',
-            'ip': CiscoDevice.managementAddress,
-            'username': CiscoDevice.username,
-            'password': CiscoDevice.password,
-            'secret': CiscoDevice.secret,
-            }
-            ssh = netmiko.ConnectHandler(**DeviceInfo)
-            ssh.enable()
-            Hostname = ssh.send_command('show run | sec hostname').split()[1]
-            serialNumber = ""
-            try:
-                serialNumber = ssh.send_command('show run | sec license').split()[-1]
-                
-            except:
-                if serialNumber == "":
-                    serialNumber = ssh.send_command("show version | sec Processor board").split()[3]
-            CiscoDevice.hostName = Hostname
-            interfaces = ssh.send_command("show ip interface brief",use_textfsm= True)
-            CiscoDevice.ports.clear()
-            for port in interfaces:
-                interface = networkPort()
-                interface.name = port["intf"]
-                interface.ipAddress = port["ipaddr"]
-                ipINfo = ssh.send_command("show run interface " + interface.name).split("\n")
-                for line in ipINfo:
-                    if "ip address" in line:
-                        interface.mask = line.split()[-1]
-                        break
-
-                if "up" in port["status"]:
-                    interface.isUp = True
-                else:
-                    interface.isUp = False
-                CiscoDevice.ports.append(interface)
-            versionInfo = ssh.send_command("show version")
-            versionInfoAsList = versionInfo.split("\n")
-            uptime = ""
-            systemOS = ""
-            Version = ""
-            
-            macAddress = ""
-            banner = ssh.send_command("show run | sec banner")
-            for line in versionInfoAsList:
-                if " uptime " in line:
-                    uptime = line.split()[1] + " " + line.split()[2] + " " + line.split()[3] + " " + line.split()[4] + " " + line.split()[5]
-                    continue
-                if "Cisco IOS" in line and not "rights" in line and not "Copyright" in line:
-                    systemOS = line   
-            CiscoDevice.upTimeLastChecked = uptime
-            CiscoDevice.OS = systemOS
-            CiscoDevice.SerialNumber = serialNumber
-            CiscoDevice.banner = banner
+        if not response.status_code == 200:
+            CiscoDevice.restconfEnabledAndWorking = False
             ssh.config_mode()
             try:
                 checkIfRestOut = ssh.send_command("restconf")
@@ -131,14 +98,25 @@ def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
                     ssh.send_command("no restconf")
             except:
                 CiscoDevice.restconfAvailable = False
+        else:
+            CiscoDevice.restconfAvailable = True
+            CiscoDevice.restconfEnabledAndWorking = True
 
 
 
             
-            print(Hostname)
-            ssh.disconnect()
-        except Exception as e:
-            print("Connection Failure For: " + CiscoDevice.managementAddress + " | " + str(e))
+        print(Hostname)
+        ssh.disconnect()
+        return CiscoDevice
+
+    except Exception as e:
+        print("Connection Failure For: " + CiscoDevice.managementAddress + " | " + str(e))
+    
+
+#ssh into all the devices in the lsit and gather information about them to be saved in the inventory or exported to json
+def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
+    for CiscoDevice in DeviceList:
+        updateDevice(CiscoDevice)
     return DeviceList
 
 
@@ -510,3 +488,31 @@ def showEigrpNeighborsAlDev(devs:list[netDevice]):
         input("Enter for Next: ")
 
 
+def testRestConf(CiscoDevice: netDevice):
+    # disable warnings from SSL/TLS certificates
+    requests.packages.urllib3.disable_warnings()
+
+    # Define module and host
+    module = 'ietf-yang-library:modules-state'
+    host = CiscoDevice.managementAddress
+
+    # Define URL
+    url = f"https://{host}/restconf/data/{module}"
+    uname = CiscoDevice.username
+    password = CiscoDevice.password
+
+
+
+    # Form header information
+    headers = {'Content-Type': 'application/yang-data+json',
+                'Accept': 'application/yang-data+json'}
+
+
+        # Performs a GET on the gevin url
+    response = requests.get(url, headers=headers, verify=False,auth=(uname,password))
+    print(response.status_code)
+    
+    if response.status_code == 200:
+
+        modules = json.loads(response.content)
+        print(modules)

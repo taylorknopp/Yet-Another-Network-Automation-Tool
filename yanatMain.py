@@ -20,6 +20,7 @@ from SSHutilities import configureEIGRP
 from SSHutilities import configStaticRouting
 from SSHutilities import showEigrpNeighborsAlDev
 from FileOperationsUtils import SaveConfigs
+from SSHutilities import testRestConf
 import IpTools
 #importing third party and system libraries
 import socket
@@ -303,10 +304,30 @@ def saveAllConfigs():
     global listOfDevices
     SaveConfigs(listOfDevices)
 
+def testRest():
+    global listOfDevices
+    deviceMenu = "Devices:  \n"
+    for c,dev in enumerate(listOfDevices):
+        deviceMenu += str(c) + ". " + dev.hostName + "\n"
+    deviceMenu += "Chose a device: "
+    usrInput = input(deviceMenu)
+    devToUse = netDevice()
+    while True:
+        if usrInput == "q":
+            return
+        try:
+            devToUse =  listOfDevices[int(usrInput)]
+            break
+        except:
+            print("Invalid Input!")
+            continue
+    testRestConf(devToUse)
+    input("continue?")
+
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'t':testRest}
 
 #multiline string for the user input menu
 menue = '''
@@ -334,6 +355,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["E: "," Save Device Info To CSV","LC: ", "Load Devices From CSV"],
 ["H: "," Set Device Hostname","X: "," Wipe Configs And Reload"],
 ["I: "," Configure Interface On Device","Y: "," Connectivity Test, ping/trace(WARNING, can take a very long time)"],
+["T: ","Test Rest Conf Config","R: ", "Not Yet Implemented"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 
@@ -341,7 +363,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 #Main user input function
 def main():
     while True:
-        headers = ["Address","Hostname","Interfaces","S/N","RestConf"]
+        headers = ["Address","Hostname","Interfaces","S/N","Username","RestConf Available","RestConf Configured"]
         table = []
         print("Inventory: " + inventoryFile)
         print("Devices: ")
@@ -350,7 +372,7 @@ def main():
                     numPorts = len(dev.ports)
                 except:
                     numPorts = 0
-                devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.SerialNumber,str(dev.restconfAvailable)]
+                devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.SerialNumber,dev.username,str(dev.restconfAvailable),str(dev.restconfEnabledAndWorking)]
                 table.append(devList.copy())
         width = os.get_terminal_size().columns
         print("=" * width)
