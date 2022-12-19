@@ -22,19 +22,22 @@ from SSHutilities import showEigrpNeighborsAlDev
 from FileOperationsUtils import SaveConfigs
 import IpTools
 from SSHutilities import rPingFromDevs
+from SerialUtils import openSerialPort
+from SerialUtils import senCommand
 #importing third party and system libraries
 import socket
 import os
 import copy
 from tabulate import tabulate
-
+import time
+import serial
 
     
 
 #global variables to be sued throughout the program, list of netowrk devcies and path for inventory json file. 
 listOfDevices = []
 inventoryFile = "inventory.json"
-
+serialPort = ""
 #what follows is all the functions that are called by the suer input main function, all function ames should be fairly self explanitory. 
 
 #use the socket library to get hte ip of the host
@@ -310,10 +313,21 @@ def rPing():
     rPingFromDevs(listOfDevices)
     input("continue?")
 
+def serialSetup():
+    global serialPort
+    serialPort = openSerialPort()
+
+    print(senCommand(serialPort,""))
+    print(senCommand(serialPort,"en"))
+    print(senCommand(serialPort,"show run"))
+        
+
+    input("Continure?")
+
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup}
 #multiline string for the user input menu
 menue = '''
 A: Scan
@@ -340,7 +354,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["E: "," Save Device Info To CSV","LC: ", "Load Devices From CSV"],
 ["H: "," Set Device Hostname","X: "," Wipe Configs And Reload"],
 ["I: "," Configure Interface On Device","Y: "," Connectivity Test, ping/trace(WARNING, can take a very long time)"],
-["T: ","Not Yet Implemenmted","R: ", "Ping Everything from Everywhere"],
+["T: ","Serial Setup","R: ", "Ping Everything from Everywhere"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 
