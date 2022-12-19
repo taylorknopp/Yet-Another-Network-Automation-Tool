@@ -20,7 +20,6 @@ from SSHutilities import configureEIGRP
 from SSHutilities import configStaticRouting
 from SSHutilities import showEigrpNeighborsAlDev
 from FileOperationsUtils import SaveConfigs
-from SSHutilities import testRestConf
 import IpTools
 from SSHutilities import rPingFromDevs
 #importing third party and system libraries
@@ -306,25 +305,6 @@ def saveAllConfigs():
     global listOfDevices
     SaveConfigs(listOfDevices)
 
-def testRest():
-    global listOfDevices
-    deviceMenu = "Devices:  \n"
-    for c,dev in enumerate(listOfDevices):
-        deviceMenu += str(c) + ". " + dev.hostName + "\n"
-    deviceMenu += "Chose a device: "
-    usrInput = input(deviceMenu)
-    devToUse = netDevice()
-    while True:
-        if usrInput == "q":
-            return
-        try:
-            devToUse =  listOfDevices[int(usrInput)]
-            break
-        except:
-            print("Invalid Input!")
-            continue
-    testRestConf(devToUse)
-    input("continue?")
 def rPing():
     global listOfDevices
     rPingFromDevs(listOfDevices)
@@ -333,7 +313,7 @@ def rPing():
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'t':testRest,'r':rPing}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing}
 #multiline string for the user input menu
 menue = '''
 A: Scan
@@ -360,7 +340,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["E: "," Save Device Info To CSV","LC: ", "Load Devices From CSV"],
 ["H: "," Set Device Hostname","X: "," Wipe Configs And Reload"],
 ["I: "," Configure Interface On Device","Y: "," Connectivity Test, ping/trace(WARNING, can take a very long time)"],
-["T: ","Test Rest Conf Config","R: ", "Ping Everything from Everywhere"],
+["T: ","Not Yet Implemenmted","R: ", "Ping Everything from Everywhere"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 

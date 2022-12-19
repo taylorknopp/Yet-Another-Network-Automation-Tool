@@ -10,6 +10,9 @@ from tabulate import tabulate
 #ssh into and update the info of a single entwork device
 def updateDevice(CiscoDevice: netDevice):
     try:
+
+
+        
         DeviceInfo = {
         'device_type': 'cisco_ios',
         'ip': CiscoDevice.managementAddress,
@@ -28,41 +31,6 @@ def updateDevice(CiscoDevice: netDevice):
             if serialNumber == "":
                 serialNumber = ssh.send_command("show version | sec Processor board").split()[3]
         CiscoDevice.hostName = Hostname
-        interfaces = ssh.send_command("show ip interface brief",use_textfsm= True)
-        CiscoDevice.ports.clear()
-        for port in interfaces:
-            interface = networkPort()
-            interface.name = port["intf"]
-            interface.ipAddress = port["ipaddr"]
-            ipINfo = ssh.send_command("show run interface " + interface.name).split("\n")
-            for line in ipINfo:
-                if "ip address" in line:
-                    interface.mask = line.split()[-1]
-                    break
-
-            if "up" in port["status"]:
-                interface.isUp = True
-            else:
-                interface.isUp = False
-            CiscoDevice.ports.append(interface)
-        versionInfo = ssh.send_command("show version")
-        versionInfoAsList = versionInfo.split("\n")
-        uptime = ""
-        systemOS = ""
-        Version = ""
-        
-        macAddress = ""
-        banner = ssh.send_command("show run | sec banner")
-        for line in versionInfoAsList:
-            if " uptime " in line:
-                uptime = line.split()[1] + " " + line.split()[2] + " " + line.split()[3] + " " + line.split()[4] + " " + line.split()[5]
-                continue
-            if "Cisco IOS" in line and not "rights" in line and not "Copyright" in line:
-                systemOS = line   
-        CiscoDevice.upTimeLastChecked = uptime
-        CiscoDevice.OS = systemOS
-        CiscoDevice.SerialNumber = serialNumber
-        CiscoDevice.banner = banner
 
         # disable warnings from SSL/TLS certificates
         requests.packages.urllib3.disable_warnings()
@@ -85,7 +53,10 @@ def updateDevice(CiscoDevice: netDevice):
 
         # Performs a GET on the gevin url
         response = requests.get(url, headers=headers, verify=False,auth=(uname,password))
-        
+
+
+
+
 
         if not response.status_code == 200:
             
@@ -101,11 +72,107 @@ def updateDevice(CiscoDevice: netDevice):
                     else:
                         CiscoDevice.restconfAvailable = True
                         ssh.send_command("no restconf")
+                    ssh.send_command_timing("end")
                 except:
                     CiscoDevice.restconfAvailable = False
         else:
             CiscoDevice.restconfAvailable = True
             CiscoDevice.restconfEnabledAndWorking = True
+
+ 
+        
+
+        
+        
+
+        
+
+
+        if CiscoDevice.restconfEnabledAndWorking:
+            requests.packages.urllib3.disable_warnings()
+
+            # Define module and host
+            module = 'ietf-interfaces:modules-state'
+            host = CiscoDevice.managementAddress
+
+            # Define URL
+            url = f"https://{host}/restconf/data/Cisco-IOS-XE-native:native/interface"
+            uname = CiscoDevice.username
+            password = CiscoDevice.password
+
+
+
+            # Form header information
+            headers = {'Content-Type': 'application/yang-data+json',
+                    'Accept': 'application/yang-data+json'}
+
+
+            # Performs a GET on the gevin url
+            response = requests.get(url, headers=headers, verify=False,auth=(uname,password))
+            modules = json.loads(response.content)
+            CiscoDevice.ports.clear()
+
+            for module in modules['Cisco-IOS-XE-native:interface']:
+                mod = modules['Cisco-IOS-XE-native:interface'][module]
+                for intf in range(0,len(mod)):
+                    intfDict = modules['Cisco-IOS-XE-native:interface'][module][intf]
+                    #print(modules['Cisco-IOS-XE-native:interface'][module][intf])
+                    interface = networkPort()
+                    interface.name = module + str(intfDict["name"])
+                    intfDictKeys = intfDict.keys()
+                    if not "shutdown" in intfDictKeys:
+                        ipDict = intfDict['ip']['address']
+                        primaryDict  = ipDict['primary']
+                        interface.ipAddress = primaryDict['address']
+                        interface.mask = primaryDict['mask']
+                        interface.isUp = True
+                    else:
+                        interface.isUp = False
+                        #print(interface.ipAddress + " | " + interface.mask)
+                    CiscoDevice.ports.append(interface)
+            
+        else:
+
+            interfaces = ssh.send_command("show ip interface brief",use_textfsm= True)
+            CiscoDevice.ports.clear()
+            for port in interfaces:
+                interface = networkPort()
+                interface.name = port["intf"]
+                interface.ipAddress = port["ipaddr"]
+                ipINfo = ssh.send_command("show run interface " + interface.name).split("\n")
+                for line in ipINfo:
+                    if "ip address" in line:
+                        interface.mask = line.split()[-1]
+                        break
+
+                if "up" in port["status"]:
+                    interface.isUp = True
+                else:
+                    interface.isUp = False
+                CiscoDevice.ports.append(interface)
+
+
+        #get version info over ssh
+        versionInfo = ssh.send_command("show version")
+        versionInfoAsList = versionInfo.split("\n")
+        uptime = ""
+        systemOS = ""
+        Version = ""
+        
+        macAddress = ""
+        banner = ssh.send_command("show run | sec banner")
+        for line in versionInfoAsList:
+            if " uptime " in line:
+                uptime = line.split()[1] + " " + line.split()[2] + " " + line.split()[3] + " " + line.split()[4] + " " + line.split()[5]
+                continue
+            if "Cisco IOS" in line and not "rights" in line and not "Copyright" in line:
+                systemOS = line   
+        CiscoDevice.upTimeLastChecked = uptime
+        CiscoDevice.OS = systemOS
+        CiscoDevice.SerialNumber = serialNumber
+        CiscoDevice.banner = banner
+
+       
 
 
 
@@ -491,36 +558,6 @@ def showEigrpNeighborsAlDev(devs:list[netDevice]):
         print(out)
         print("-------------------------------------------------------------------------")
         input("Enter for Next: ")
-
-
-def testRestConf(CiscoDevice: netDevice):
-    # disable warnings from SSL/TLS certificates
-    requests.packages.urllib3.disable_warnings()
-
-    # Define module and host
-    module = 'ietf-yang-library:modules-state'
-    host = CiscoDevice.managementAddress
-
-    # Define URL
-    url = f"https://{host}/restconf/data/{module}"
-    uname = CiscoDevice.username
-    password = CiscoDevice.password
-
-
-
-    # Form header information
-    headers = {'Content-Type': 'application/yang-data+json',
-                'Accept': 'application/yang-data+json'}
-
-
-        # Performs a GET on the gevin url
-    response = requests.get(url, headers=headers, verify=False,auth=(uname,password))
-    print(response.status_code)
-    
-    if response.status_code == 200:
-
-        modules = json.loads(response.content)
-        print(modules)
 
 def rPingFromDevs(devs:list[netDevice]):
 

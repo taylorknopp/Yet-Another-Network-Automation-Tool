@@ -32,12 +32,12 @@ class networkPort():
         self.isUp = False
         self.isSwitchPort = True
         self.type = "ethernet"
-        self.ipAddress = ""
+        self.ipAddress = "unassigned"
         self.ipV6Address = "::0"
         self.ipV6LinkLocaleAddress = "::0"
         self.IsTrunkPort = False
         self.AllowedVlans = []
-        self.mask = ""
+        self.mask = "unassigned"
 #class for storing information about vlans interface thugh cruently unused
 class vlanInterface():
     def __init__(self):

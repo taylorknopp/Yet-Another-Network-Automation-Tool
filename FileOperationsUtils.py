@@ -59,13 +59,23 @@ def exportInfoToCSV(devList: list[netDevice],inventoryFile: str):
     if len(filePathParts) > 1:
         for part in filePathParts[0:len(filePathParts ) - 1]:
             filePath += part + "\\"
-    filePath += "configs.csv"
+    filePath += "Devices.csv"
     file = open(filePath,"w")
-    file.write("Hostname,MAC,Type,Serial Number,OS,Number Of Interfaces,Up Time,Banner Text \n")
     for dev in devList:
-        line = (dev.hostName.replace(",","") + "," + dev.macAddress.replace(",","") + "," + dev.deviceType + "," + dev.SerialNumber.replace(",","") + "," + dev.OS.replace(",","")  + "," + str(len(dev.ports))  + "," + dev.upTimeLastChecked.replace(",","") + "," + dev.banner.replace(",","").replace("\n","").replace("^C","") + "\n")
+        file.write("Hostname,Serial Number,OS,Number Of Interfaces,Up Time \n")
+        line = (dev.hostName.replace(",","") + "," + dev.SerialNumber.replace(",","") + "," + dev.OS.replace(",","")  + "," + str(len(dev.ports))  + "," + dev.upTimeLastChecked.replace(",","") +  "\n")
         file.write(line)
+        file.write("Interfaces,,,, \n")
+        file.write("Name,Ip Address,Mask,Enabeled, \n")
+        for p in dev.ports:
+            line2 = f"{p.name},{p.ipAddress},{p.mask},{p.isUp}, \n"
+            file.write(line2)
+        file.write(",,,,, \n")
+
+    
     file.close
+
+
 
 def SaveConfigs(ListOfDevicesToSaveInInventoryFile: list[netDevice]):
 
