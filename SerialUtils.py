@@ -50,6 +50,48 @@ def senCommand(port: serial.Serial,command: str):
             break
     return read
 
+def bypassSetupWizzard(port: serial.Serial):
+    port.flushInput()
+    port.flushOutput()
+    port.write("no\r".encode("utf-8"))
+    time.sleep(20)
+    read = ""
+    while True:
+        oldLen = len(read)
+        time.sleep(15)
+        newRead = port.readall().decode('utf-8')
+        read +=  newRead
+        if len(newRead) > 0:
+            read+=newRead
+            time.sleep(5)
+        else:
+            print(senCommand(port,""))
+            break
+            
+
+def initialSetupOverSerial(port: serial.Serial):
+    port.flushInput()
+    port.flushOutput()
+    out = senCommand(port,"")
+    if "[yes/no]" in out:
+        bypassSetupWizzard(port)
+    print()
+
+
+    print(senCommand(port,"en"))
+    print(senCommand(port,"config t"))
+    print(senCommand(port,"interface gig0/0"))
+    print(senCommand(port,"ip address 192.168.50.235 255.255.255.0"))
+    print(senCommand(port,"no shutdown"))
+    print(senCommand(port,"exit"))
+    read = ""
+    while True:
+        oldLen = len(read)
+        read +=  port.readall().decode('utf-8')
+        time.sleep(0.1)
+        if oldLen == len(read):
+            break
+    return read
 
     
 

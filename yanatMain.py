@@ -24,6 +24,8 @@ import IpTools
 from SSHutilities import rPingFromDevs
 from SerialUtils import openSerialPort
 from SerialUtils import senCommand
+from SerialUtils import bypassSetupWizzard
+from SerialUtils import initialSetupOverSerial
 #importing third party and system libraries
 import socket
 import os
@@ -316,10 +318,8 @@ def rPing():
 def serialSetup():
     global serialPort
     serialPort = openSerialPort()
+    initialSetupOverSerial(serialPort)
 
-    print(senCommand(serialPort,""))
-    print(senCommand(serialPort,"en"))
-    print(senCommand(serialPort,"show run"))
         
 
     input("Continure?")
