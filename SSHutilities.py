@@ -52,17 +52,39 @@ def updateDevice(CiscoDevice: netDevice):
 
 
         # Performs a GET on the gevin url
-        response = requests.get(url, headers=headers, verify=False,auth=(uname,password))
+        response = None
+        try:
+            response = requests.get(url, headers=headers, verify=False,auth=(uname,password))
+        except:
+            print("Resconf Request Failed, Likely Not Supported or Configurted")
 
 
 
 
-
-        if not response.status_code == 200:
-            
-            CiscoDevice.restconfEnabledAndWorking = False
-            if "restconf" in CiscoDevice.config:
+        if not response == None:
+            if (not response.status_code == 200):
+                
+                CiscoDevice.restconfEnabledAndWorking = False
+                if "restconf" in CiscoDevice.config:
+                    CiscoDevice.restconfAvailable = True
+                else:
+                    ssh.config_mode()
+                    try:
+                        checkIfRestOut = ssh.send_command("restconf")
+                        if "Invalid" in checkIfRestOut or len(checkIfRestOut) > 0:
+                            CiscoDevice.restconfAvailable = False
+                        else:
+                            CiscoDevice.restconfAvailable = True
+                            ssh.send_command("no restconf")
+                        ssh.send_command_timing("end")
+                    except:
+                        CiscoDevice.restconfAvailable = False
+            else:
                 CiscoDevice.restconfAvailable = True
+                CiscoDevice.restconfEnabledAndWorking = True
+        else:
+            if "restconf" in CiscoDevice.config:
+                    CiscoDevice.restconfAvailable = True
             else:
                 ssh.config_mode()
                 try:
@@ -75,9 +97,6 @@ def updateDevice(CiscoDevice: netDevice):
                     ssh.send_command_timing("end")
                 except:
                     CiscoDevice.restconfAvailable = False
-        else:
-            CiscoDevice.restconfAvailable = True
-            CiscoDevice.restconfEnabledAndWorking = True
 
  
         
@@ -259,7 +278,8 @@ def checkIfDeviceIsCisco(managementAddress,username,password) -> bool:
         ssh = netmiko.ConnectHandler(**DeviceInfo)
         ssh.disconnect()
         return True
-    except:
+    except Exception as E:
+        print(f"SSH Error For Device: {managementAddress} | Error: {E}")
         return False
 #ssh into a devcie and configure the apropriate interface
 def configureInterface(device:netDevice):
@@ -600,3 +620,35 @@ def rPingFromDevs(devs:list[netDevice]):
                 print(dev2.hostName + " -> " + dev.hostName + ": " + interface.name)
             pings.append(thisPortsRown)
     print(tabulate(pings,headers,tablefmt="simple_grid"))
+
+def addDeviceManually(device_ip : str):
+    newDevice = netDevice()
+    while True:
+                usrInput = input("username for " + device_ip + ": ")
+                if not usrInput == "":
+                    newDevice.username = usrInput
+                    break
+                else:
+                    print("Username cannot be blank.")
+                
+    while True:
+        usrInput = input("Password for " + device_ip + ": ")
+        if not usrInput == "":
+            newDevice.password = usrInput
+            break
+        else:
+            print("Password cannot be blank.")
+    while True:
+        usrInput = input("Secret for " + device_ip + ": ")
+        if not usrInput == "":
+            newDevice.secret = usrInput
+            break
+        else:
+            print("Secret cannot be blank.")
+    if checkIfDeviceIsCisco(device_ip,newDevice.username,newDevice.password):
+                
+        newDevice.managementAddress = device_ip
+        return newDevice
+                
+    else:
+        print ("Device is inaccessible: " ,device_ip)

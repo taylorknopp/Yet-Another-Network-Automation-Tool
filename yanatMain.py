@@ -26,6 +26,7 @@ from SerialUtils import openSerialPort
 from SerialUtils import senCommand
 from SerialUtils import bypassSetupWizzard
 from SerialUtils import initialSetupOverSerial
+from SSHutilities import addDeviceManually
 #importing third party and system libraries
 import socket
 import os
@@ -324,10 +325,27 @@ def serialSetup():
 
     input("Continure?")
 
+def addNewDev():
+    global listOfDevices
+    newDev = None
+    stringForInput = "Device To Add(or Q to Quit): "
+    while True:
+        ipToUseFromUser = input(stringForInput).lower()
+        if ipToUseFromUser == "q":
+            return
+        elif IpTools.validateIp(ipToUseFromUser):
+            newDev = addDeviceManually(ipToUseFromUser)
+            break
+        else:
+            print("Invalid Input!")
+    if not newDev == None:
+        listOfDevices.append(newDev)
+
+    
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev}
 #multiline string for the user input menu
 menue = '''
 A: Scan
@@ -348,6 +366,7 @@ Q: Quit
 What would you like to do?: '''
 
 MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
+["AA: "," Add Device Manually","SS: "," Place Holder"],
 ["B: "," Gather Device Info","sc: "," Save Configs as IOS Files"],
 ["C: "," Configure static or Dynamic Routing on a L3 Device","AC: "," Apply Config From Inventory"],
 ["D: "," Grab Configurations ","NT: "," View Neighbor Tables for all Devices"],
