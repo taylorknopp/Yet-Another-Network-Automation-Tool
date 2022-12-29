@@ -6,7 +6,8 @@ import IpTools
 import requests
 import json
 from tabulate import tabulate
-    
+import time
+from concurrent.futures import ThreadPoolExecutor    
 #ssh into and update the info of a single entwork device
 def updateDevice(CiscoDevice: netDevice):
     try:
@@ -580,46 +581,100 @@ def showEigrpNeighborsAlDev(devs:list[netDevice]):
         input("Enter for Next: ")
 
 def rPingFromDevs(devs:list[netDevice]):
-
+    #Header list for building table
     headers = [" "]
+    #list for containing subsequent lists of ping results for eatch device interface wiht an address
     pings = []
+    startTime = time.time()
+    #Take our list of device and iterate over them
+    listOfListsToPing = []
     for dev in devs:
         headers.append(dev.hostName)
-        
-        for interface in dev.ports:
-            if interface.ipAddress == "unassigned":
+        #on each device iterate over the lsit of interfaces on that device
+        DictOfThingsToPingForThisDev = {}
+        for dev2 in devs:
+            if dev2 == dev:
                 continue
-            thisPortsRown = []
-            thisPortsRown.append(dev.hostName + " | " + interface.name + " " + interface.ipAddress)
-            
+            for interface in dev2.ports:
+                if "unassigned" in interface.ipAddress:
+                    continue
+                DictOfThingsToPingForThisDev[f"{dev2.hostName} | {interface.name}"] = interface
+        thisDevsPingSetAslist = [dev,DictOfThingsToPingForThisDev]
+        print(len(DictOfThingsToPingForThisDev))
+        listOfListsToPing.append(thisDevsPingSetAslist)
+    with ThreadPoolExecutor(len(devs)) as executor:
+        future_results = executor.map(pingListFromDev, listOfListsToPing)
+        results = [result for result in future_results]
+    
+    print(results)
+    resultsDict = {}
+    for dict in results:
+        print(len(dict))
+        resultsDict.update(dict)
+    for dev in devs:
 
-            
-            for dev2 in devs:
-                if dev2 == dev:
-                    continue 
-                DeviceInfo = {
-                        'device_type': 'cisco_ios',
-                        'ip': dev2.managementAddress,
-                        'username': dev2.username,
-                        'password': dev2.password,
-                        'secret': dev2.secret,
-                        "fast_cli": False,
-                        }
-                try:
-                    ssh = netmiko.ConnectHandler(**DeviceInfo)
-                    ssh.enable()
-                    out = ssh.send_command_timing("ping " + interface.ipAddress)
-                    outList = out.split('\n')
-                    
-                
-                    thisPortsRown.append(outList[2])
-                    ssh.disconnect()
-                except Exception as e:
-                    print("Something Went Wrong: " + str(e))
-                    thisPortsRown.append("Error")
-                print(dev2.hostName + " -> " + dev.hostName + ": " + interface.name)
-            pings.append(thisPortsRown)
+        for interface in dev.ports:
+            if "unassigned" in interface.ipAddress:
+                    continue
+            listOfResultsForThisINterface = []
+            listOfResultsForThisINterface.append(f"{dev.hostName} | {interface.name} {interface.ipAddress}")
+            for device in headers[1:]:
+                if device == dev.hostName:
+                    listOfResultsForThisINterface.append("N/A")
+                    continue
+                listOfResultsForThisINterface.append(resultsDict[device][interface.ipAddress])
+            pings.append(listOfResultsForThisINterface)
+
+
+
+    
+    #print the table
     print(tabulate(pings,headers,tablefmt="simple_grid"))
+    endtTime = time.time()
+    timeTaken = endtTime-startTime
+    print("Time Taken: " + str(timeTaken))
+
+def pingListFromDev(listOfInfo: list):
+    dev = listOfInfo[0]
+    dictOfDevices = listOfInfo[1]
+    DictOfResults = {}
+
+    for key in dictOfDevices.keys():
+        interface = dictOfDevices[key]
+        DeviceInfo = {
+            'device_type': 'cisco_ios',
+            'ip': dev.managementAddress,
+            'username': dev.username,
+            'password': dev.password,
+            'secret': dev.secret,
+            "fast_cli": False,
+            }
+        pingResult = ""
+        #try to do the ssh, run the command and store the restults
+        try:
+            print(f"{dev.hostName} -> {interface.ipAddress}")
+            ssh = netmiko.ConnectHandler(**DeviceInfo)
+            ssh.enable()
+            out = ssh.send_command_timing("ping " + interface.ipAddress,last_read=15)
+            
+            outList = out.split('\n')
+           
+            if "Sending" in outList[2] and len(outList) >= 4:
+                pingResul = outList[3]
+            elif "Sending" in outList[2] and not len(outList) >= 4:
+                pingResul = "Error" 
+            else:
+                pingResul = outList[2]
+            ssh.disconnect()
+        except Exception as e:
+            print("Something Went Wrong: " + str(e))
+            pingResul =  "Error"
+        if pingResul == "":
+            pingResul == "Error"
+        DictOfResults[interface.ipAddress] = pingResul
+    returnDict = {dev.hostName:DictOfResults}
+    return returnDict
+
 
 def addDeviceManually(device_ip : str):
     newDevice = netDevice()
