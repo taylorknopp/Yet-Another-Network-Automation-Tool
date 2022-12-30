@@ -27,6 +27,11 @@ from SerialUtils import senCommand
 from SerialUtils import bypassSetupWizzard
 from SerialUtils import initialSetupOverSerial
 from SSHutilities import addDeviceManually
+from IpTools import validateIp
+from IpTools import getHostIp
+from services import tftp_server_start
+from SSHutilities import backupAllDevsToTftp
+from services import tftpServerStop
 #importing third party and system libraries
 import socket
 import os
@@ -34,6 +39,8 @@ import copy
 from tabulate import tabulate
 import time
 import serial
+from netifaces import interfaces, ifaddresses, AF_INET
+import tftpy
 
     
 
@@ -41,6 +48,7 @@ import serial
 listOfDevices = []
 inventoryFile = "inventory.json"
 serialPort = ""
+tftpServerThread = None
 #what follows is all the functions that are called by the suer input main function, all function ames should be fairly self explanitory. 
 
 #use the socket library to get hte ip of the host
@@ -341,32 +349,42 @@ def addNewDev():
     if not newDev == None:
         listOfDevices.append(newDev)
 
+def tftpBackup():
+    deviceMenu = "Addresses:  \n"
+    addressList = getHostIp()
+    for c,ip in enumerate(addressList):
+        deviceMenu += str(c) + ". " + ip + "\n"
+    deviceMenu += "Chose an Address to Listen On( Q for Quit): "
     
+    ipToUse = ""
+    while True:
+        usrInput = input(deviceMenu)
+        if usrInput == "q":
+            return
+        try:
+            ipToUse =  addressList[int(usrInput)]
+            break
+        except:
+            print("Invalid Input!")
+            continue
+    serverThread,server = tftp_server_start(69,os.getcwd(),ipToUse)
+    backupAllDevsToTftp(listOfDevices,ipToUse)
+    tftpServerStop(serverThread,server)
+
+
+
+
+    
+
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup}
 #multiline string for the user input menu
-menue = '''
-A: Scan
-B: Gather Device Info
-C: Configure static or Dynamic Routing on a L3 Device
-D: Grab Configurations 
-E: Save Device Info To CSV
-H: Set Device Hostname
-I: Configure Interface On Device
-L: Load Inventory File
-S: Save Inventory File
-sc: Save Configs as IOS Files
-AC: Apply Config From Inventory
-NT: View Neighbor Tables for all Devices
-X: Wipe Configs And Reload
-Y: Connectivity Test, ping/trace(WARNING, can take a very long time)
-Q: Quit
-What would you like to do?: '''
+
 
 MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
-["AA: "," Add Device Manually","SS: "," Place Holder"],
+["AA: "," Add Device Manually","SS: "," TFTP Backup"],
 ["B: "," Gather Device Info","sc: "," Save Configs as IOS Files"],
 ["C: "," Configure static or Dynamic Routing on a L3 Device","AC: "," Apply Config From Inventory"],
 ["D: "," Grab Configurations ","NT: "," View Neighbor Tables for all Devices"],

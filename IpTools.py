@@ -1,4 +1,5 @@
 import re
+from netifaces import interfaces, ifaddresses, AF_INET
 #Dictyionary for use as a lookup tbale for validating and converting subnet masks
 CiderVSDecimalLookupDict = {
 "1":	"128.0.0.0",
@@ -75,3 +76,14 @@ def ValidateMask(mask: str):
     elif mask in CiderVSDecimalLookupDict.values():
         return True
     return False
+
+def getHostIp():
+    listOfIps = [] 
+    for ifaceName in interfaces():
+        interface = ifaddresses(ifaceName)
+        for key in interface.keys():
+
+            addresses = interface[key][0]['addr']
+            if(validateIp(addresses)):
+                listOfIps.append(addresses)
+    return listOfIps

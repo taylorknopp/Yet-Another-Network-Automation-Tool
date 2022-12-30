@@ -677,6 +677,7 @@ def pingListFromDev(listOfInfo: list):
 
 
 def addDeviceManually(device_ip : str):
+
     newDevice = netDevice()
     while True:
                 usrInput = input("username for " + device_ip + ": ")
@@ -707,3 +708,23 @@ def addDeviceManually(device_ip : str):
                 
     else:
         print ("Device is inaccessible: " ,device_ip)
+
+def backupAllDevsToTftp(listOfDevs: list[netDevice],ip:str):
+    for dev in listOfDevs:
+        try:
+            DeviceInfo = {
+                'device_type': 'cisco_ios',
+                'ip': dev.managementAddress,
+                'username': dev.username,
+                'password': dev.password,
+                'secret': dev.secret,
+                "fast_cli": False,
+                }
+            ssh = netmiko.ConnectHandler(**DeviceInfo)
+            ssh.enable()
+            command = f"copy running-config tftp \r{ip}\r{dev.hostName}.ios"
+            out = ssh.send_command_timing(command)
+            ssh.disconnect()
+            print(f"{dev.hostName} tftp -> {ip}: {out}")
+        except Exception as e:
+            print(f"Error in TFTP Backup: " + e)
