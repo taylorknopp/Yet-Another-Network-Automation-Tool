@@ -32,6 +32,9 @@ from IpTools import getHostIp
 from services import tftp_server_start
 from SSHutilities import backupAllDevsToTftp
 from services import tftpServerStop
+from SSHutilities import defaultRouteToAllDevices
+from SSHutilities import staticrouteToAllDevices
+from SerialUtils import serialRestoreFromTFTP
 #importing third party and system libraries
 import socket
 import os
@@ -48,6 +51,7 @@ import tftpy
 listOfDevices = []
 inventoryFile = "inventory.json"
 serialPort = ""
+controlPort = ""
 tftpServerThread = None
 #what follows is all the functions that are called by the suer input main function, all function ames should be fairly self explanitory. 
 
@@ -371,27 +375,89 @@ def tftpBackup():
     backupAllDevsToTftp(listOfDevices,ipToUse)
     tftpServerStop(serverThread,server)
 
+def bulkConfig():
+    listOfOptions = ["Bulk Default Route","Bulk Default Gateway","Bulk Radius","Bulk Static Route"]
+    menu = "Devices:  \n"
+    for c,opt in enumerate(listOfOptions):
+        menu += str(c) + ". " + opt + "\n"
+    menu += "Chose a option or (Q)uit: "
+    
+    devToUse = netDevice()
+    usrInput = ""
+    while True:
+        usrInput = input(menu)
+        if usrInput == "q":
+            return
+        elif usrInput.isnumeric():
+            break
+        print("Invalid Input!")
+    match usrInput:
+        case "0":
+            while True:
+                usrInput = input("Destination Address or (Q)uit: ").lower()
+                if IpTools.validateIp(usrInput):
+                    destinationAddress = usrInput
+                    break
+                elif usrInput == "q":
+                    return
+                else:
+                    print("Invalid Input.")
+            defaultRouteToAllDevices(listOfDevices,usrInput)
+        case "1":
+            pass
+        case "2":
+            pass
+        case "3":
+            staticrouteToAllDevices(listOfDevices)
 
+def tftpRestore():
+    deviceMenu = "Addresses:  \n"
+    addressList = getHostIp()
+    for c,ip in enumerate(addressList):
+        deviceMenu += str(c) + ". " + ip + "\n"
+    deviceMenu += "Chose an Address to Listen On( Q for Quit): "
+    
+    ipToUse = ""
+    while True:
+        usrInput = input(deviceMenu)
+        if usrInput == "q":
+            return
+        try:
+            ipToUse =  addressList[int(usrInput)]
+            break
+        except:
+            print("Invalid Input!")
+            continue
+    serverThread,server = tftp_server_start(69,os.getcwd(),ipToUse)
 
+    global serialPort
+    global controlPort
+    print("Choose Port For Configuration Data")
+    serialPort = openSerialPort()
+    print("Choose Port For Multiplexer Control")
+    controlPort = openSerialPort()
 
+    serialRestoreFromTFTP(serialPort,controlPort,ipToUse)
+    tftpServerStop(serverThread,server)
     
 
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
-menueInputToFunctionMap = {'a':scanNet,'b':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
+menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,'b':bulkConfig,'tt':tftpRestore}
 #multiline string for the user input menu
 
 
 MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["AA: "," Add Device Manually","SS: "," TFTP Backup"],
-["B: "," Gather Device Info","sc: "," Save Configs as IOS Files"],
+["G: "," Gather Device Info","SC: "," Save Configs as IOS Files"],
 ["C: "," Configure static or Dynamic Routing on a L3 Device","AC: "," Apply Config From Inventory"],
 ["D: "," Grab Configurations ","NT: "," View Neighbor Tables for all Devices"],
 ["E: "," Save Device Info To CSV","LC: ", "Load Devices From CSV"],
 ["H: "," Set Device Hostname","X: "," Wipe Configs And Reload"],
 ["I: "," Configure Interface On Device","Y: "," Connectivity Test, ping/trace(WARNING, can take a very long time)"],
 ["T: ","Serial Setup","R: ", "Ping Everything from Everywhere"],
+["B: ","Bulk Config, simple config to all devices","TT: ", "Restore Configs From TFTP"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 
@@ -399,7 +465,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 #Main user input function
 def main():
     while True:
-        headers = ["Address","Hostname","Interfaces","S/N","Username","RestConf Available","RestConf Configured"]
+        headers = ["Address","Hostname","Interfaces","S/N","Username","Management Port","RestConf Available","RestConf Configured"]
         table = []
         print("Inventory: " + inventoryFile)
         print("Devices: ")
@@ -408,7 +474,7 @@ def main():
                     numPorts = len(dev.ports)
                 except:
                     numPorts = 0
-                devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.SerialNumber,dev.username,str(dev.restconfAvailable),str(dev.restconfEnabledAndWorking)]
+                devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.SerialNumber,dev.username,dev.dedicatedManagementPort,str(dev.restconfAvailable),str(dev.restconfEnabledAndWorking)]
                 table.append(devList.copy())
         width = os.get_terminal_size().columns
         print("=" * width)

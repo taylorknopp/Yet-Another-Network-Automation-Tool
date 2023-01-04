@@ -7,7 +7,8 @@ import requests
 import json
 from tabulate import tabulate
 import time
-from concurrent.futures import ThreadPoolExecutor    
+from concurrent.futures import ThreadPoolExecutor
+from operator import attrgetter    
 #ssh into and update the info of a single entwork device
 def updateDevice(CiscoDevice: netDevice):
     try:
@@ -24,6 +25,13 @@ def updateDevice(CiscoDevice: netDevice):
         ssh = netmiko.ConnectHandler(**DeviceInfo)
         ssh.enable()
         Hostname = ssh.send_command('show run | sec hostname').split()[1]
+
+        
+        
+        
+
+
+
         serialNumber = ""
         try:
             serialNumber = ssh.send_command('show run | sec license').split()[-1]
@@ -158,6 +166,7 @@ def updateDevice(CiscoDevice: netDevice):
             for port in interfaces:
                 interface = networkPort()
                 interface.name = port["intf"]
+                
                 interface.ipAddress = port["ipaddr"]
                 ipINfo = ssh.send_command("show run interface " + interface.name).split("\n")
                 for line in ipINfo:
@@ -169,7 +178,11 @@ def updateDevice(CiscoDevice: netDevice):
                     interface.isUp = True
                 else:
                     interface.isUp = False
+                if interface.name == "mgmt":
+                    CiscoDevice.dedicatedManagementPort = True
+                    CiscoDevice.managementAddress = interface.ipAddress
                 CiscoDevice.ports.append(interface)
+        
 
 
         #get version info over ssh
@@ -728,3 +741,78 @@ def backupAllDevsToTftp(listOfDevs: list[netDevice],ip:str):
             print(f"{dev.hostName} tftp -> {ip}: {out}")
         except Exception as e:
             print(f"Error in TFTP Backup: " + e)
+
+def defaultRouteToAllDevices(listOfDevs: list[netDevice],ip:str):
+    for dev in listOfDevs:
+        try:
+            DeviceInfo = {
+                'device_type': 'cisco_ios',
+                'ip': dev.managementAddress,
+                'username': dev.username,
+                'password': dev.password,
+                'secret': dev.secret,
+                "fast_cli": False,
+                }
+            ssh = netmiko.ConnectHandler(**DeviceInfo)
+            ssh.enable()
+            ssh.config_mode()
+            command = "ip route 0.0.0.0 0.0.0.0 " + ip
+            out = ssh.send_command(command)
+            ssh.disconnect()
+            print(f"{dev.hostName} | {out}")
+        except Exception as e:
+            print(f"Error Creating Route: " + e)
+
+def staticrouteToAllDevices(listOfDevs: list[netDevice]):
+    destinationAddress = ""
+    destinationMask = ""
+    nextHpAddress = ""
+    while True:
+        usrInput = input("Destination Address or (Q)uit: ").lower()
+        if IpTools.validateIp(usrInput):
+            destinationAddress = usrInput
+            break
+        elif usrInput == "q":
+            return
+        else:
+            print("Invalid Input.")
+    while True:
+        usrInput = input("Destination Mask or (Q)uit: ").lower()
+        if IpTools.ValidateMask(usrInput) or usrInput == "0.0.0.0":
+            destinationMask = usrInput
+            break
+        elif usrInput == "q":
+            return
+        else:
+            print("Invalid Input.")
+    while True:
+        usrInput = input("Next Hop Address or (Q)uit: ").lower()
+        if IpTools.validateIp(usrInput):
+            nextHpAddress = usrInput
+            break
+        elif usrInput == "q":
+            return
+        else:
+            print("Invalid Input.")
+    command = "ip route " + destinationAddress + " " + destinationMask + " " + nextHpAddress
+    for dev in listOfDevs:
+        try:
+            DeviceInfo = {
+                'device_type': 'cisco_ios',
+                'ip': dev.managementAddress,
+                'username': dev.username,
+                'password': dev.password,
+                'secret': dev.secret,
+                "fast_cli": False,
+                }
+            ssh = netmiko.ConnectHandler(**DeviceInfo)
+            ssh.enable()
+            ssh.config_mode()
+            
+            out = ssh.send_command(command)
+            ssh.disconnect()
+            print(f"{dev.hostName} | {out}")
+        except Exception as e:
+            print(f"Error Creating Route: " + e)
+
+

@@ -81,20 +81,8 @@ def initialSetupOverSerial(port: serial.Serial):
     print(senCommand(port,"en"))
     print(senCommand(port,"config t"))
     print(senCommand(port,"interface gig0/0"))
-    print(senCommand(port,"ip address 192.168.50.57 255.255.255.0"))
+    print(senCommand(port,"ip address 192.168.50.56 255.255.255.0"))
     print(senCommand(port,"no shutdown"))
-    print(senCommand(port,"exit"))
-    print(senCommand(port,"hostname rtr102"))
-    print(senCommand(port,"ip domain name netw3100.local"))
-    print(senCommand(port,"crypto key generate rsa"))
-    print(senCommand(port,"1024"))
-    print(senCommand(port,"enable secret cisco"))
-    print(senCommand(port,"username cisco privilege 15 password cisco"))
-    print(senCommand(port,"ip ssh version 2"))
-    print(senCommand(port,"line vty 0 4"))
-    print(senCommand(port,"login local"))
-    print(senCommand(port,"transport input ssh"))
-    print(senCommand(port,"exit"))
     read = ""
     while True:
         oldLen = len(read)
@@ -105,7 +93,27 @@ def initialSetupOverSerial(port: serial.Serial):
     return read
 
     
-
+def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Serial,ip):
+    initialSetupOverSerial(portForConfig)
+    print(senCommand(portForConfig,"exit"))
+    print(senCommand(portForConfig,"ip default-gateway 192.168.50.1"))
+    print(senCommand(portForConfig,"ip route 0.0.0.0 0.0.0.0 192.168.50.1"))
+    print(senCommand(portForConfig,"exit"))
+    print(senCommand(portForConfig,"copy tftp: running-config"))
+    print(senCommand(portForConfig,ip))
+    print(senCommand(portForConfig,"rtr101.ios"))
+    print(senCommand(portForConfig,""))
+    print(senCommand(portForConfig,""))
+    read = ""
+    while True:
+        oldLen = len(read)
+        read +=  senCommand(portForConfig,"")
+        time.sleep(0.1)
+        if not oldLen == len(read):
+            print(read)
+            if "rtr101" in read:
+                break
+    return read
 
             
 
