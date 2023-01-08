@@ -2,6 +2,7 @@
 /yanatVenv
 /yanatVenv/*
 *.ios
+/tftp
 __pycache__/
 *.py[cod]
 *$py.class
