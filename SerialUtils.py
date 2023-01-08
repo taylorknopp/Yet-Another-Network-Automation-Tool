@@ -41,6 +41,21 @@ def senCommand(port: serial.Serial,command: str):
     port.flushOutput()
     command += "\r"
     port.write(command.encode('utf-8'))
+    time.sleep(0.25)
+    read = ""
+    while True:
+        oldLen = len(read)
+        read +=  port.readall().decode('utf-8')
+        time.sleep(0.1)
+        if oldLen == len(read):
+            break
+    return read
+
+def senCommandToControl(port: serial.Serial,command: str):
+    port.flushInput()
+    port.flushOutput()
+    port.write(command.encode('utf-8'))
+    time.sleep(0.25)
     read = ""
     while True:
         oldLen = len(read)
@@ -69,10 +84,10 @@ def bypassSetupWizzard(port: serial.Serial):
             break
             
 
-def initialSetupOverSerial(port: serial.Serial):
+def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
     port.flushInput()
     port.flushOutput()
-    out = senCommand(port,"")
+    out = senCommand(port,"\r")
     if "[yes/no]" in out:
         bypassSetupWizzard(port)
     print()
@@ -80,8 +95,8 @@ def initialSetupOverSerial(port: serial.Serial):
 
     print(senCommand(port,"en"))
     print(senCommand(port,"config t"))
-    print(senCommand(port,"interface gig0/0"))
-    print(senCommand(port,"ip address 192.168.50.56 255.255.255.0"))
+    print(senCommand(port,f"interface {dev.ManagementPortName}"))
+    print(senCommand(port,f"ip address {dev.managementAddress} 255.255.255.0"))
     print(senCommand(port,"no shutdown"))
     read = ""
     while True:
@@ -93,27 +108,61 @@ def initialSetupOverSerial(port: serial.Serial):
     return read
 
     
-def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Serial,ip):
-    initialSetupOverSerial(portForConfig)
-    print(senCommand(portForConfig,"exit"))
-    print(senCommand(portForConfig,"ip default-gateway 192.168.50.1"))
-    print(senCommand(portForConfig,"ip route 0.0.0.0 0.0.0.0 192.168.50.1"))
-    print(senCommand(portForConfig,"exit"))
-    print(senCommand(portForConfig,"copy tftp: running-config"))
-    print(senCommand(portForConfig,ip))
-    print(senCommand(portForConfig,"rtr101.ios"))
-    print(senCommand(portForConfig,""))
-    print(senCommand(portForConfig,""))
-    read = ""
-    while True:
-        oldLen = len(read)
-        read +=  senCommand(portForConfig,"")
-        time.sleep(0.1)
-        if not oldLen == len(read):
-            print(read)
-            if "rtr101" in read:
-                break
-    return read
+def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Serial,ip,devList:list[netDevice]):
+    serialPortToNumberDict = {1:'a',2:'b',3:'c',4:'d',5:'e',6:'f',7:'g',8:'h',9:'i',10:'j',11:'k',12:'l',13:'m',14:'n',15:'o',16:'p'}
+    if len(devList) > 16:
+        for x in len(devList)/16:
+            for i in range(1,17):
+                try:
+                    if devList[i+x].serialPortAssociation == 'z':
+                        devList[i+x].serialPortAssociation = serialPortToNumberDict[i]
+                except:
+                    continue
+    else:
+        for i in range(1,17):
+                try:
+                    if devList[i+x].serialPortAssociation == 'z':
+                        devList[i+x].serialPortAssociation = serialPortToNumberDict[i]
+                except:
+                    continue
+    for dev in devList:
+        print(f"{dev.hostName} -> {dev.serialPortAssociation}")
+    
+    input("Are All Conections As Bove? ")
+
+    for dev in devList:
+        print(senCommandToControl(portForControl,dev.serialPortAssociation.lower()))
+        time.sleep(5)
+        initialSetupOverSerial(portForConfig,dev)
+        print(senCommand(portForConfig,"exit"))
+        print(senCommand(portForConfig,"ip default-gateway 192.168.50.1"))
+        print(senCommand(portForConfig,"ip route 0.0.0.0 0.0.0.0 192.168.50.1"))
+        print(senCommand(portForConfig,"exit"))
+        print(senCommand(portForConfig,"copy tftp: running-config"))
+        print(senCommand(portForConfig,ip))
+        print(senCommand(portForConfig,f"{dev.hostName}.ios"))
+        print(senCommand(portForConfig,""))
+        print(senCommand(portForConfig,""))
+        read = ""
+        count = 0
+        configLoadedSuccessfully = False
+        while True:
+            oldLen = len(read)
+            read +=  senCommand(portForConfig,"")
+            time.sleep(0.1)
+            count+=1
+            if not oldLen == len(read):
+                print(read)
+                if dev.hostName in read:
+                    configLoadedSuccessfully = True
+                    break
+                elif count > 500:
+                    input(f"Error Configuring Over Serial for {dev.hostNameame}, continue?")
+                    break
+        if configLoadedSuccessfully:
+            print(senCommand(portForConfig,"config t"))
+            print(senCommand(portForConfig,"crypto key generate rsa"))
+            print(senCommand(portForConfig,"1024"))
 
             
 

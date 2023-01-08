@@ -35,6 +35,8 @@ from services import tftpServerStop
 from SSHutilities import defaultRouteToAllDevices
 from SSHutilities import staticrouteToAllDevices
 from SerialUtils import serialRestoreFromTFTP
+from SSHutilities import coppyFileToDeviceFlash
+from SSHutilities import coppyFileFromDeviceToTFTP
 #importing third party and system libraries
 import socket
 import os
@@ -436,15 +438,110 @@ def tftpRestore():
     serialPort = openSerialPort()
     print("Choose Port For Multiplexer Control")
     controlPort = openSerialPort()
+    time.sleep(5)
 
-    serialRestoreFromTFTP(serialPort,controlPort,ipToUse)
+    serialRestoreFromTFTP(serialPort,controlPort,ipToUse,listOfDevices)
     tftpServerStop(serverThread,server)
+
+
+
+def tftpUtils():
+    global listOfDevices
+    listOfOptions = ["Copy File To Flash From TFTP","Copy File From Flash To TFTP"]
+    menu = "Options:  \n"
+    for c,opt in enumerate(listOfOptions):
+        menu += str(c) + ". " + opt + "\n"
+    menu += "Chose a option or (Q)uit: "
     
+    usrInput = ""
+    while True:
+        usrInput = input(menu)
+        if usrInput == "q":
+            return
+        elif usrInput.isnumeric():
+            break
+        print("Invalid Input!")
+    match usrInput:
+        case "0":
+           
+            deviceMenu = "Devices:  \n"
+            for c,dev in enumerate(listOfDevices):
+                deviceMenu += str(c) + ". " + dev.hostName + "\n"
+            deviceMenu += "Chose a device: "
+            usrInput = input(deviceMenu)
+            devToUse = netDevice()
+            while True:
+                if usrInput == "q":
+                    return
+                try:
+                    devToUse =  listOfDevices[int(usrInput)]
+                    break
+                except:
+                    print("Invalid Input!")
+                    continue
+            deviceMenu = "Addresses:  \n"
+            addressList = getHostIp()
+            for c,ip in enumerate(addressList):
+                deviceMenu += str(c) + ". " + ip + "\n"
+            deviceMenu += "Chose an Address to Listen On( Q for Quit): "
+            
+            ipToUse = ""
+            while True:
+                usrInput = input(deviceMenu)
+                if usrInput == "q":
+                    return
+                try:
+                    ipToUse =  addressList[int(usrInput)]
+                    break
+                except:
+                    print("Invalid Input!")
+                    continue
+            coppyFileToDeviceFlash(devToUse,ipToUse)
+        case "1":
+           
+            deviceMenu = "Devices:  \n"
+            for c,dev in enumerate(listOfDevices):
+                deviceMenu += str(c) + ". " + dev.hostName + "\n"
+            deviceMenu += "Chose a device: "
+            usrInput = input(deviceMenu)
+            devToUse = netDevice()
+            while True:
+                if usrInput == "q":
+                    return
+                try:
+                    devToUse =  listOfDevices[int(usrInput)]
+                    break
+                except:
+                    print("Invalid Input!")
+                    continue
+            deviceMenu = "Addresses:  \n"
+            addressList = getHostIp()
+            for c,ip in enumerate(addressList):
+                deviceMenu += str(c) + ". " + ip + "\n"
+            deviceMenu += "Chose an Address to Listen On( Q for Quit): "
+            
+            ipToUse = ""
+            while True:
+                usrInput = input(deviceMenu)
+                if usrInput == "q":
+                    return
+                try:
+                    ipToUse =  addressList[int(usrInput)]
+                    break
+                except:
+                    print("Invalid Input!")
+                    continue
+            coppyFileFromDeviceToTFTP(devToUse,ipToUse)
+            
+        case "2":
+            pass
+        case "3":
+            staticrouteToAllDevices(listOfDevices)    
 
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,'b':bulkConfig,'tt':tftpRestore}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils}
 #multiline string for the user input menu
 
 
@@ -458,6 +555,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["I: "," Configure Interface On Device","Y: "," Connectivity Test, ping/trace(WARNING, can take a very long time)"],
 ["T: ","Serial Setup","R: ", "Ping Everything from Everywhere"],
 ["B: ","Bulk Config, simple config to all devices","TT: ", "Restore Configs From TFTP"],
+["TF: ","TFTP Utils Menue","ZZ: ","PLace Holder"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 
@@ -465,7 +563,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 #Main user input function
 def main():
     while True:
-        headers = ["Address","Hostname","Interfaces","S/N","Username","Management Port","RestConf Available","RestConf Configured"]
+        headers = ["Address","Hostname","Interfaces","S/N","Username","Management Port","RestConf Available","RestConf Configured","Serial Port"]
         table = []
         print("Inventory: " + inventoryFile)
         print("Devices: ")
@@ -474,7 +572,7 @@ def main():
                     numPorts = len(dev.ports)
                 except:
                     numPorts = 0
-                devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.SerialNumber,dev.username,dev.dedicatedManagementPort,str(dev.restconfAvailable),str(dev.restconfEnabledAndWorking)]
+                devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.SerialNumber,dev.username,dev.dedicatedManagementPort,str(dev.restconfAvailable),str(dev.restconfEnabledAndWorking),dev.serialPortAssociation]
                 table.append(devList.copy())
         width = os.get_terminal_size().columns
         print("=" * width)

@@ -7,8 +7,11 @@ import requests
 import json
 from tabulate import tabulate
 import time
+import os
 from concurrent.futures import ThreadPoolExecutor
-from operator import attrgetter    
+from operator import attrgetter
+from services import tftp_server_start
+from services import tftpServerStop    
 #ssh into and update the info of a single entwork device
 def updateDevice(CiscoDevice: netDevice):
     try:
@@ -206,7 +209,9 @@ def updateDevice(CiscoDevice: netDevice):
         CiscoDevice.banner = banner
 
        
-
+        for interface in CiscoDevice.ports:
+            if interface.ipAddress == CiscoDevice.managementAddress:
+                CiscoDevice.ManagementPortName = interface.name
 
 
             
@@ -220,8 +225,15 @@ def updateDevice(CiscoDevice: netDevice):
 
 #ssh into all the devices in the lsit and gather information about them to be saved in the inventory or exported to json
 def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
+    serialPortToNumberDict = {1:'A',2:'B',3:'C',4:'D',5:'E',6:'F',7:'G',8:'H',9:'I',10:'J',11:'K',12:'L',13:'M',14:'N',15:'O',16:'P'}
+    i = 1
     for CiscoDevice in DeviceList:
         updateDevice(CiscoDevice)
+        CiscoDevice.serialPortAssociation = serialPortToNumberDict[i];
+        i += 1
+        if i > 16:
+            i = 0
+
     return DeviceList
 
 
@@ -816,3 +828,114 @@ def staticrouteToAllDevices(listOfDevs: list[netDevice]):
             print(f"Error Creating Route: " + e)
 
 
+def coppyFileFromDeviceToTFTP(dev:netDevice,ip):
+    tftp_server_dir = os.getcwd()
+    files = os.listdir(tftp_server_dir + "\\tftp\\")
+
+    
+        
+
+    # Return the selected file
+    
+    serverThread,server = tftp_server_start(69,tftp_server_dir,ip)
+
+    try:
+        DeviceInfo = {
+        'device_type': 'cisco_ios',
+        'ip': dev.managementAddress,
+        'username': dev.username,
+        'password': dev.password,
+        'secret': dev.secret,
+        "fast_cli": False,
+        }
+        ssh = netmiko.ConnectHandler(**DeviceInfo)
+        ssh.enable()
+
+        outFiles = ssh.send_command("show flash",use_textfsm=True).split("\n")
+        files = []
+        for line in outFiles:
+            files.append(line.split(" ")[-1])
+        files.pop(0)
+        files.pop()
+        files.pop()
+        files.pop()
+
+        while True:
+            for i, file in enumerate(files):
+                print(f"{i}: {file}")
+
+            # Prompt the user to select a file
+            file_index_In = input("Enter the index of the file you want to select: ")
+            
+            try:
+                if(file_index_In.lower() == "q"):
+                    return
+                fileIindex = int(file_index_In)
+                fileName = files[fileIindex]
+                break
+            except:
+                print("Invalid Input")
+
+
+        out = ssh.send_command_timing("copy flash tftp:")
+        print(out)
+        out = ssh.send_command_timing(fileName)
+        print(out)
+        out = ssh.send_command_timing(ip)
+        print(out)
+        out = ssh.send_command_timing("",read_timeout=10000)
+        print(out)
+    except Exception as e:
+        print("Error Moving File: " + str(e))
+    
+    tftpServerStop(serverThread,server)
+
+
+def coppyFileToDeviceFlash(dev:netDevice,ip):
+    tftp_server_dir = os.getcwd()
+    files = os.listdir(tftp_server_dir + "\\tftp\\")
+
+    while True:
+        for i, file in enumerate(files):
+            print(f"{i}: {file}")
+
+        # Prompt the user to select a file
+        file_index_In = input("Enter the index of the file you want to select: ")
+        
+        try:
+            if(file_index_In.lower() == "q"):
+                return
+            fileIindex = int(file_index_In)
+            filePath = files[fileIindex]
+            break
+        except:
+            print("Invalid Input")
+        
+
+    # Return the selected file
+    
+    serverThread,server = tftp_server_start(69,tftp_server_dir,ip)
+
+    try:
+        DeviceInfo = {
+        'device_type': 'cisco_ios',
+        'ip': dev.managementAddress,
+        'username': dev.username,
+        'password': dev.password,
+        'secret': dev.secret,
+        "fast_cli": False,
+        }
+        ssh = netmiko.ConnectHandler(**DeviceInfo)
+        ssh.enable()
+        out = ssh.send_command_timing("copy tftp: flash")
+        print(out)
+        out = ssh.send_command_timing(ip)
+        print(out)
+        out = ssh.send_command_timing(filePath)
+        print(out)
+        out = ssh.send_command_timing("",read_timeout=10000)
+        print(out)
+    except Exception as e:
+        print("Error Moving File: " + str(e))
+    
+    tftpServerStop(serverThread,server)

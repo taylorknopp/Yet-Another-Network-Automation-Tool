@@ -7,6 +7,7 @@ class netDevice():
         self.hostName = "Generic HostName"
         self.config = ""
         self.dedicatedManagementPort = False
+        self.ManagementPortName = ""
         self.Brand = "not set"
         self.deviceType = "not set"
         self.ports = []
@@ -21,6 +22,7 @@ class netDevice():
         self.secret = ""
         self.restconfAvailable = False
         self.restconfEnabledAndWorking = False
+        self.serialPortAssociation = 'z'
     def printPortIps(self):
        for port in self.ports:
         print(port.name + " | " + port.ipAddress)

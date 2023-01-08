@@ -23,7 +23,7 @@ def scan(subnet):
 
 
    
-    for n in range(1, 60):
+    for n in range(1, 110):
         device_ip = subnet.split(".")[0] + "." + subnet.split(".")[1]+ "." + subnet.split(".")[2]+ "." + str(n)
         print(device_ip)
         loss = os.system('ping -w 50 -n 1 ' + device_ip)
