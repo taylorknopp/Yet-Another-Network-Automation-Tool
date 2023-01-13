@@ -20,4 +20,4 @@ def tftp_server_start(port, tftp_server_dir,ip):
 
 def tftpServerStop(serverThread:threading.Thread,Server:tftpy.TftpServer):
     Server.stop()
-    print("Attampting to shutdown tftp server.")
+    print("Attempting to shutdown tftp server.")

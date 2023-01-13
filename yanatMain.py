@@ -46,6 +46,8 @@ import time
 import serial
 from netifaces import interfaces, ifaddresses, AF_INET
 import tftpy
+import signal 
+import sys
 
     
 
@@ -55,7 +57,24 @@ inventoryFile = "inventory.json"
 serialPort = ""
 controlPort = ""
 tftpServerThread = None
-#what follows is all the functions that are called by the suer input main function, all function ames should be fairly self explanitory. 
+tftpServer = None
+#handler for dealing with ctrl-c interupt
+def handler(signum, frame):
+    msg = "Ctrl-c was pressed. Exeting! "
+    print(msg, end="", flush=True)
+    global tftpServer
+    global tftpServerThread
+    try:
+        if tftpServer != None:
+            tftpServerStop(tftpServerThread,tftpServer)
+        pass
+    except:
+        pass
+    quit()
+    
+ 
+ 
+
 
 #use the socket library to get hte ip of the host
 def getIpOfHost():
@@ -356,6 +375,8 @@ def addNewDev():
         listOfDevices.append(newDev)
 
 def tftpBackup():
+    global tftpServer
+    global tftpServerThread
     deviceMenu = "Addresses:  \n"
     addressList = getHostIp()
     for c,ip in enumerate(addressList):
@@ -373,9 +394,9 @@ def tftpBackup():
         except:
             print("Invalid Input!")
             continue
-    serverThread,server = tftp_server_start(69,os.getcwd(),ipToUse)
+    tftpServerThread,tftpServer = tftp_server_start(69,os.getcwd(),ipToUse)
     backupAllDevsToTftp(listOfDevices,ipToUse)
-    tftpServerStop(serverThread,server)
+    tftpServerStop(tftpServerThread,tftpServer)
 
 def bulkConfig():
     listOfOptions = ["Bulk Default Route","Bulk Default Gateway","Bulk Radius","Bulk Static Route"]
@@ -413,6 +434,8 @@ def bulkConfig():
             staticrouteToAllDevices(listOfDevices)
 
 def tftpRestore():
+    global tftpServer
+    global tftpServerThread
     deviceMenu = "Addresses:  \n"
     addressList = getHostIp()
     for c,ip in enumerate(addressList):
@@ -430,7 +453,7 @@ def tftpRestore():
         except:
             print("Invalid Input!")
             continue
-    serverThread,server = tftp_server_start(69,os.getcwd(),ipToUse)
+    tftpServerThread,tftpServer = tftp_server_start(69,os.getcwd(),ipToUse)
 
     global serialPort
     global controlPort
@@ -441,12 +464,14 @@ def tftpRestore():
     time.sleep(5)
 
     serialRestoreFromTFTP(serialPort,controlPort,ipToUse,listOfDevices)
-    tftpServerStop(serverThread,server)
+    tftpServerStop(tftpServerThread,tftpServer)
 
 
 
 def tftpUtils():
     global listOfDevices
+    global tftpServer
+    global tftpServerThread
     listOfOptions = ["Copy File To Flash From TFTP","Copy File From Flash To TFTP"]
     menu = "Options:  \n"
     for c,opt in enumerate(listOfOptions):
@@ -600,4 +625,5 @@ def main():
 
 
 #calling main
+signal.signal(signal.SIGINT, handler)
 main()
