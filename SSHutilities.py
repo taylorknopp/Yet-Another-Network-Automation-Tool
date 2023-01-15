@@ -13,6 +13,8 @@ from operator import attrgetter
 from services import tftp_server_start
 from services import tftpServerStop    
 #ssh into and update the info of a single entwork device
+def cls():
+    os.system('cls' if os.name=='nt' else 'clear')
 def updateDevice(CiscoDevice: netDevice):
     try:
 
@@ -43,6 +45,7 @@ def updateDevice(CiscoDevice: netDevice):
             if serialNumber == "":
                 serialNumber = ssh.send_command("show version | sec Processor board").split()[3]
         CiscoDevice.hostName = Hostname
+        CiscoDevice.deviceType = "router"
 
         # disable warnings from SSL/TLS certificates
         requests.packages.urllib3.disable_warnings()
@@ -109,6 +112,7 @@ def updateDevice(CiscoDevice: netDevice):
                     ssh.send_command_timing("end")
                 except:
                     CiscoDevice.restconfAvailable = False
+        
 
  
         
@@ -161,6 +165,8 @@ def updateDevice(CiscoDevice: netDevice):
                         interface.isUp = False
                         #print(interface.ipAddress + " | " + interface.mask)
                     CiscoDevice.ports.append(interface)
+                    if "Vlan" in interface.name:
+                        CiscoDevice.deviceType = "switch"
             
         else:
 
@@ -184,6 +190,8 @@ def updateDevice(CiscoDevice: netDevice):
                 if interface.name == "mgmt":
                     CiscoDevice.dedicatedManagementPort = True
                     CiscoDevice.managementAddress = interface.ipAddress
+                if "Vlan" in interface.name:
+                        CiscoDevice.deviceType = "switch"
                 CiscoDevice.ports.append(interface)
         
 
@@ -194,6 +202,7 @@ def updateDevice(CiscoDevice: netDevice):
         uptime = ""
         systemOS = ""
         Version = ""
+        
         
         macAddress = ""
         banner = ssh.send_command("show run | sec banner")
@@ -214,7 +223,12 @@ def updateDevice(CiscoDevice: netDevice):
                 CiscoDevice.ManagementPortName = interface.name
 
 
-            
+        ssh.config_mode()
+        try:
+            ssh.send_command_timing("line vty 0 4")
+            ssh.send_command_timing("logging synchronous")
+        except:
+            print("Error Setting logging synchronous.")
         print(Hostname)
         ssh.disconnect()
         return CiscoDevice
@@ -892,6 +906,7 @@ def coppyFileFromDeviceToTFTP(dev:netDevice,ip):
 
 
 def coppyFileToDeviceFlash(dev:netDevice,ip):
+
     tftp_server_dir = os.getcwd()
     files = os.listdir(tftp_server_dir + "\\tftp\\")
 
@@ -939,3 +954,109 @@ def coppyFileToDeviceFlash(dev:netDevice,ip):
         print("Error Moving File: " + str(e))
     
     tftpServerStop(serverThread,server)
+
+def bulkVlanCreate(devsToCreateVlansOn:list[netDevice]):
+    vlansToCreate = []
+    while True:
+        cls()
+        print("---------------")
+        print("Vlans: ")
+        for vlan in vlansToCreate:
+            print(vlan)
+        vlan = input("Add a vlan to the creation list, D for done Q for quit: ").lower()
+        if vlan == "q":
+            return;
+        if vlan == "d":
+            break;
+        if vlan.isnumeric():
+            try:
+
+                vlansToCreate.append(int(vlan))
+                continue
+            except:
+                pass
+        print("Invlaid Input")
+
+    for dev in devsToCreateVlansOn:
+        try:
+            
+            DeviceInfo = {
+            'device_type': 'cisco_ios',
+            'ip': dev.managementAddress,
+            'username': dev.username,
+            'password': dev.password,
+            'secret': dev.secret,
+            "fast_cli": False,
+            }
+            ssh = netmiko.ConnectHandler(**DeviceInfo)
+            ssh.enable()
+            ssh.config_mode()
+            if dev.deviceType == "switch":
+                for vlan in vlansToCreate:
+
+                    createVlanInterface = False
+                    enableVlanInterface = False
+                    ipAddress = ""
+                    mask = ""
+                    while True:
+                        createVlanInterfaceStr = input(f"Create interface for {vlan} on switch {dev.hostName}(Y/N): ").lower()
+                        if createVlanInterfaceStr == "y":
+                            createVlanInterface = True
+                            break
+                        elif createVlanInterface == "n":
+                            createVlanInterface = False
+                            break
+                        print("Invalid Input")
+                    
+                    while createVlanInterface:
+                        enableInterface = input(f"Enable interface for {vlan} on switch {dev.hostName}(Y/N): ").lower()
+                        if enableInterface == "y":
+                            enableVlanInterface = True
+                            break
+                        elif enableInterface == "n":
+                            enableVlanInterface = False
+                            break
+                        print("Invalid Input")
+                    
+                    while enableVlanInterface:
+                        while True:
+                            ipAddress = input("Ip Address for Interface  or q to quit: ").lower()
+                            if ipAddress == "q":
+                                return
+                            elif IpTools.validateIp(ipAddress):
+                                break
+                            print("Invalid IP")
+                        while True:
+                            mask = input("Subnet Mask for Interface or q to quit: ").lower()
+                            if mask == "q":
+                                return
+                            elif IpTools.ValidateMask(mask):
+                                break
+                            print("Invalid mask")
+                        
+                        if "/" in mask:
+                            mask = IpTools.ciderToDecimal(mask)
+                        break
+
+
+
+
+                    
+
+                    print(f"vlan{str(vlan)} -> {dev.hostName}")
+                    ssh.send_command_timing(f"vlan {str(vlan)}")
+                    ssh.send_command_timing("exit")
+                    if createVlanInterface:
+                        ssh.send_command_timing(f"interface vlan {str(vlan)}")
+                        
+                    if enableInterface:
+                        ssh.send_command(f"ip address {ipAddress} {mask}")
+                        ssh.send_command("no shutdown")
+                        
+            else:
+                for vlan in vlansToCreate:
+                    print(f"Vlan{str(vlan)} -> {dev.hostName}")
+                    ssh.send_command(f"vlan {vlan}")
+        except:
+            print(f"Something went wrong creating vlans on {dev.hostName}")
+            

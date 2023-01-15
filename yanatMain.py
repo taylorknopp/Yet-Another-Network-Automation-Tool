@@ -37,6 +37,7 @@ from SSHutilities import staticrouteToAllDevices
 from SerialUtils import serialRestoreFromTFTP
 from SSHutilities import coppyFileToDeviceFlash
 from SSHutilities import coppyFileFromDeviceToTFTP
+from SSHutilities import bulkVlanCreate
 #importing third party and system libraries
 import socket
 import os
@@ -73,7 +74,8 @@ def handler(signum, frame):
     quit()
     
  
- 
+def cls():
+   os.system('cls' if os.name=='nt' else 'clear')
 
 
 #use the socket library to get hte ip of the host
@@ -399,39 +401,85 @@ def tftpBackup():
     tftpServerStop(tftpServerThread,tftpServer)
 
 def bulkConfig():
-    listOfOptions = ["Bulk Default Route","Bulk Default Gateway","Bulk Radius","Bulk Static Route"]
+    global listOfDevices
+    listOfOptions = ["Bulk Default Route","Bulk Default Gateway","Bulk Vlan","Bulk Static Route"]
     menu = "Devices:  \n"
     for c,opt in enumerate(listOfOptions):
         menu += str(c) + ". " + opt + "\n"
     menu += "Chose a option or (Q)uit: "
     
-    devToUse = netDevice()
+    listofDevToUse = []
+
+    portMenu = "Devices: \n"
+   
+    while True:
+        cls()
+        print("Selected Devices: ")
+        print("--------------------------------------------------------------------")
+        for dev in listofDevToUse:
+            print(dev.hostName + " | " + dev.managementAddress)
+        print("--------------------------------------------------------------------")
+
+        portMenu = ""
+        for c,dev in enumerate(listOfDevices):
+
+            portMenu += str(c) + ". " + dev.hostName + " | " + dev.managementAddress +  "\n"
+        
+        portMenu += "Chose devices to bulk configure, D for done, Q for quit: "
+        
+        usrInput = input(portMenu)
+        if usrInput == "q":
+            return
+        if usrInput == "d" and len(listofDevToUse) > 0:
+            break
+        elif usrInput == "d" and len(listofDevToUse) <= 0:
+            print("must advertise at least one network in EIGRP")
+            continue
+        try:
+            if not listOfDevices[int(usrInput)] in listofDevToUse:
+                listofDevToUse.append(listOfDevices[int(usrInput)])
+            else:
+                print("Device Already In List.")
+        except:
+            print("Invalid Input!")
+            continue
+
+
+
+
+
+
+
     usrInput = ""
     while True:
         usrInput = input(menu)
         if usrInput == "q":
             return
         elif usrInput.isnumeric():
-            break
-        print("Invalid Input!")
-    match usrInput:
-        case "0":
-            while True:
-                usrInput = input("Destination Address or (Q)uit: ").lower()
-                if IpTools.validateIp(usrInput):
-                    destinationAddress = usrInput
+            match usrInput:
+                case "0":
+                    while True:
+                        usrInput = input("Destination Address or (Q)uit: ").lower()
+                        if IpTools.validateIp(usrInput):
+                            destinationAddress = usrInput
+                            break
+                        elif usrInput == "q":
+                            return
+                        else:
+                            print("Invalid Input.")
+                    defaultRouteToAllDevices(listofDevToUse,usrInput)
                     break
-                elif usrInput == "q":
-                    return
-                else:
-                    print("Invalid Input.")
-            defaultRouteToAllDevices(listOfDevices,usrInput)
-        case "1":
-            pass
-        case "2":
-            pass
-        case "3":
-            staticrouteToAllDevices(listOfDevices)
+                case "1":
+                    pass
+                case "2":
+                    bulkVlanCreate(listofDevToUse)
+                    break
+                case "3":
+                    staticrouteToAllDevices(listofDevToUse)
+                    break
+            
+        print("Invalid Input!")
+    
 
 def tftpRestore():
     global tftpServer
@@ -588,7 +636,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 #Main user input function
 def main():
     while True:
-        headers = ["Address","Hostname","Interfaces","S/N","Username","Management Port","RestConf Available","RestConf Configured","Serial Port"]
+        headers = ["Address","Hostname","Interfaces","Type","S/N","Username","Management Port","RestConf Available","RestConf Configured","Serial Port"]
         table = []
         print("Inventory: " + inventoryFile)
         print("Devices: ")
@@ -597,7 +645,7 @@ def main():
                     numPorts = len(dev.ports)
                 except:
                     numPorts = 0
-                devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.SerialNumber,dev.username,dev.dedicatedManagementPort,str(dev.restconfAvailable),str(dev.restconfEnabledAndWorking),dev.serialPortAssociation]
+                devList = [dev.managementAddress,dev.hostName, str(numPorts),dev.deviceType,dev.SerialNumber,dev.username,dev.dedicatedManagementPort,str(dev.restconfAvailable),str(dev.restconfEnabledAndWorking),dev.serialPortAssociation]
                 table.append(devList.copy())
         width = os.get_terminal_size().columns
         print("=" * width)
