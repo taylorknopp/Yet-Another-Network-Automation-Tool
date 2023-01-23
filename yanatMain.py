@@ -492,6 +492,7 @@ def tftpRestore():
     
     ipToUse = ""
     while True:
+
         usrInput = input(deviceMenu)
         if usrInput == "q":
             return
@@ -501,7 +502,8 @@ def tftpRestore():
         except:
             print("Invalid Input!")
             continue
-    tftpServerThread,tftpServer = tftp_server_start(69,os.getcwd(),ipToUse)
+    tftpServerDir = os.getcwd() + inventoryFile.removesuffix(".json")
+    tftpServerThread,tftpServer = tftp_server_start(69,tftpServerDir,ipToUse)
 
     global serialPort
     global controlPort
@@ -520,7 +522,7 @@ def tftpUtils():
     global listOfDevices
     global tftpServer
     global tftpServerThread
-    listOfOptions = ["Copy File To Flash From TFTP","Copy File From Flash To TFTP"]
+    listOfOptions = ["Copy File To Flash From TFTP","Copy File From Flash To TFTP","Start TFTP Sevrer"]
     menu = "Options:  \n"
     for c,opt in enumerate(listOfOptions):
         menu += str(c) + ". " + opt + "\n"
@@ -569,7 +571,7 @@ def tftpUtils():
                 except:
                     print("Invalid Input!")
                     continue
-            coppyFileToDeviceFlash(devToUse,ipToUse)
+            coppyFileToDeviceFlash(devToUse,ipToUse,inventoryFile)
         case "1":
            
             deviceMenu = "Devices:  \n"
@@ -604,12 +606,35 @@ def tftpUtils():
                 except:
                     print("Invalid Input!")
                     continue
-            coppyFileFromDeviceToTFTP(devToUse,ipToUse)
+            coppyFileFromDeviceToTFTP(devToUse,ipToUse,inventoryFile)
             
         case "2":
-            pass
+            deviceMenu = ""
+            addressList = getHostIp()
+            for c,ip in enumerate(addressList):
+                deviceMenu += str(c) + ". " + ip + "\n"
+            deviceMenu += "Chose an Address to Listen On( Q for Quit): "
+            
+            ipToUse = ""
+            while True:
+                usrInput = input(deviceMenu)
+                if usrInput == "q":
+                    return
+                try:
+                    ipToUse =  addressList[int(usrInput)]
+                    break
+                except:
+                    print("Invalid Input!")
+                    continue
+            
+            global tftpServer
+            global tftpServerThread
+            tftp_server_dir = os.getcwd() + "\\" + inventoryFile.removesuffix(".json")
+            tftpServerThread,tftpServer = tftp_server_start(69,tftp_server_dir,ipToUse)
+            input("TFTP Running, Enter to stop...")
+            tftpServerStop(tftpServerThread,tftpServer)
         case "3":
-            staticrouteToAllDevices(listOfDevices)    
+           pass    
 
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 

@@ -842,11 +842,16 @@ def staticrouteToAllDevices(listOfDevs: list[netDevice]):
             print(f"Error Creating Route: " + e)
 
 
-def coppyFileFromDeviceToTFTP(dev:netDevice,ip):
-    tftp_server_dir = os.getcwd()
-    files = os.listdir(tftp_server_dir + "\\tftp\\")
-
+def coppyFileFromDeviceToTFTP(dev:netDevice,ip,inventoryFile:str):
+    tftp_server_dir = os.getcwd() + "\\" + inventoryFile.removeprefix(".json")
     
+    CHECK_FOLDER = os.path.isdir(tftp_server_dir + "\\tftp\\")
+
+# If folder doesn't exist, then create it.
+    if not CHECK_FOLDER:
+        os.makedirs(tftp_server_dir + "\\tftp\\")
+
+    files = os.listdir(tftp_server_dir + "\\tftp\\")
         
 
     # Return the selected file
@@ -864,15 +869,24 @@ def coppyFileFromDeviceToTFTP(dev:netDevice,ip):
         }
         ssh = netmiko.ConnectHandler(**DeviceInfo)
         ssh.enable()
-
-        outFiles = ssh.send_command("show flash",use_textfsm=True).split("\n")
-        files = []
-        for line in outFiles:
-            files.append(line.split(" ")[-1])
-        files.pop(0)
-        files.pop()
-        files.pop()
-        files.pop()
+        try:
+            outFiles = ssh.send_command("show flash",use_textfsm=True).split("\n")
+            files = []
+            for line in outFiles:
+                files.append(line.split(" ")[-1])
+            files.pop(0)
+            files.pop()
+            files.pop()
+            files.pop()
+        except:
+            outFiles = ssh.send_command("dir",use_textfsm=True).split("\n")
+            files = []
+            for line in outFiles:
+                files.append(line.split(" ")[-1])
+            files.pop(0)
+            files.pop()
+            files.pop()
+            files.pop()
 
         while True:
             for i, file in enumerate(files):
@@ -905,9 +919,9 @@ def coppyFileFromDeviceToTFTP(dev:netDevice,ip):
     tftpServerStop(serverThread,server)
 
 
-def coppyFileToDeviceFlash(dev:netDevice,ip):
+def coppyFileToDeviceFlash(dev:netDevice,ip,inventoryFile:str):
 
-    tftp_server_dir = os.getcwd()
+    tftp_server_dir = os.getcwd() + "\\" + inventoryFile.removesuffix(".json")
     files = os.listdir(tftp_server_dir + "\\tftp\\")
 
     while True:
