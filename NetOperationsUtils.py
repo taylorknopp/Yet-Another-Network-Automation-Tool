@@ -76,7 +76,7 @@ def ArpHost(IP):
     addrs = psutil.net_if_addrs()
     for eth in addrs.keys():
 
-        if not "Local" in eth:    
+        if not "Local" in eth and not "Loop" in eth:    
             nameToUse = eth
             break
 
