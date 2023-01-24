@@ -4,6 +4,7 @@ import IpTools
 from SSHutilities import checkIfDeviceIsCisco
 import platform
 import scapy.all as scapy
+from netifaces import interfaces, ifaddresses, AF_INET
 
 #scan for network devices, gather info aboutnthem fomr the user(username,password,secret) and store it on netDev class instances. 
 #Then taempt to ssh into those devices to ensure they are acutlly cisco devices before adding them to the amster device lsit
@@ -70,13 +71,27 @@ def scan(subnet):
     return list_of_devices
 
 def ArpHost(IP):
+
+    listOfIps = []
+    nameToUse = ""
+    for ifaceName in interfaces():
+        interface = ifaddresses(ifaceName)
+        addresses = interface[23][0]['addr']
+        if not "127.0" in addresses and IpTools.validateIp(addresses):    
+            nameToUse = ifaceName
+
+
+
+
+
+
     arp_req_frame = scapy.ARP(pdst = IP)
 
     broadcast_ether_frame = scapy.Ether(dst = "ff:ff:ff:ff:ff:ff")
     
     broadcast_ether_arp_req_frame = broadcast_ether_frame / arp_req_frame
 
-    answered_list = scapy.srp(broadcast_ether_arp_req_frame, timeout = 1, verbose = False)[0]
+    answered_list = scapy.srp(broadcast_ether_arp_req_frame, timeout = 0.1,iface=nameToUse, verbose = False)[0]
     result = []
     for i in range(0,len(answered_list)):
         client_dict = {"ip" : answered_list[i][1].psrc, "mac" : answered_list[i][1].hwsrc}
