@@ -212,7 +212,7 @@ def BuildInventory():
 def InventoryFileSetupAndSave():
     global inventoryFile
     while True:
-        usrInput = input("Please enter file path or blank to sue the exsiting path: ")
+        usrInput = input("Please enter file path or blank to use the exsiting path: ")
         path = ""
         
 
