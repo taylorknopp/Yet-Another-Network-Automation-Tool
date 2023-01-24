@@ -5,7 +5,7 @@ from SSHutilities import checkIfDeviceIsCisco
 import platform
 import scapy.all as scapy
 from netifaces import interfaces, ifaddresses, AF_INET
-
+import psutil
 #scan for network devices, gather info aboutnthem fomr the user(username,password,secret) and store it on netDev class instances. 
 #Then taempt to ssh into those devices to ensure they are acutlly cisco devices before adding them to the amster device lsit
 def scan(subnet):
@@ -72,13 +72,13 @@ def scan(subnet):
 
 def ArpHost(IP):
 
-    listOfIps = []
-    nameToUse = ""
-    for ifaceName in interfaces():
-        interface = ifaddresses(ifaceName)
-        addresses = interface[23][0]['addr']
-        if not "127.0" in addresses and IpTools.validateIp(addresses):    
-            nameToUse = ifaceName
+
+    addrs = psutil.net_if_addrs()
+    for eth in addrs.keys():
+
+        if not "Local" in eth:    
+            nameToUse = eth
+            break
 
 
 
