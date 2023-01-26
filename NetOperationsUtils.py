@@ -91,7 +91,7 @@ def ArpHost(IP):
     
     broadcast_ether_arp_req_frame = broadcast_ether_frame / arp_req_frame
 
-    answered_list = scapy.srp(broadcast_ether_arp_req_frame, timeout = 0.1,iface=nameToUse, verbose = False)[0]
+    answered_list = scapy.srp(broadcast_ether_arp_req_frame, timeout = 0.25,iface=nameToUse, verbose = False)[0]
     result = []
     for i in range(0,len(answered_list)):
         client_dict = {"ip" : answered_list[i][1].psrc, "mac" : answered_list[i][1].hwsrc}
