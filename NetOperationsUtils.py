@@ -25,12 +25,29 @@ def scan(subnet):
         else:
             print("Invalid Input!")
 
-
+    addrs = psutil.net_if_addrs()
+    addrsKeys = addrs.keys()
+    nameToUse = ""
+    listOfNames = []
+    while True:
+        for c,key in enumerate(addrsKeys):
+            listOfNames.append(key)
+            intAddr = addrs[key][1].address
+            print(f"{c}. {key} : {intAddr}")
+        usrInput = input("Chose your Interface: ")
+        try:
+            nameToUse = listOfNames[int(usrInput)]
+            break
+        except:
+            print("Invalid Input")
    
     for n in range(1, 255):
         device_ip = subnet.split(".")[0] + "." + subnet.split(".")[1]+ "." + subnet.split(".")[2]+ "." + str(n)
         print(device_ip)
-        loss = ArpHost(device_ip)
+
+    
+
+        loss = ArpHost(device_ip,nameToUse)
         if len(loss) > 0:
             newDevice = netDevice()
             newDevice.managementAddress = device_ip
@@ -70,20 +87,7 @@ def scan(subnet):
                 print ("device is down" ,device_ip)
     return list_of_devices
 
-def ArpHost(IP):
-
-
-    addrs = psutil.net_if_addrs()
-    for eth in addrs.keys():
-
-        if not "Local" in eth and not "lo" in eth:    
-            nameToUse = eth
-            break
-
-
-
-
-
+def ArpHost(IP,nameToUse):
 
     arp_req_frame = scapy.ARP(pdst = IP)
 
