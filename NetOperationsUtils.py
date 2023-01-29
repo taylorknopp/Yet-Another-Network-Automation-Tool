@@ -29,11 +29,17 @@ def scan(subnet):
     addrsKeys = addrs.keys()
     nameToUse = ""
     listOfNames = []
+    listOfAddresses = []
+    for c,key in enumerate(addrsKeys):
+        try:
+                listOfNames.append(key)
+                listOfAddresses.append(addrs[key][1].address)
+        except:
+            pass
+            
     while True:
-        for c,key in enumerate(addrsKeys):
-            listOfNames.append(key)
-            intAddr = addrs[key][1].address
-            print(f"{c}. {key} : {intAddr}")
+        for c in range(len(listOfNames)):
+            print(f"{c}. {listOfNames[c]} | {listOfAddresses[c]}")
         usrInput = input("Chose your Interface: ")
         try:
             nameToUse = listOfNames[int(usrInput)]
