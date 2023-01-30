@@ -456,9 +456,8 @@ def bulkConfig():
         if usrInput == "q":
             return
         elif usrInput.isnumeric():
-            match usrInput:
-                case "0":
-                    while True:
+            if usrInput == "0":
+                while True:
                         usrInput = input("Destination Address or (Q)uit: ").lower()
                         if IpTools.validateIp(usrInput):
                             destinationAddress = usrInput
@@ -467,17 +466,17 @@ def bulkConfig():
                             return
                         else:
                             print("Invalid Input.")
-                    defaultRouteToAllDevices(listofDevToUse,usrInput)
-                    break
-                case "1":
-                    pass
-                case "2":
-                    bulkVlanCreate(listofDevToUse)
-                    break
-                case "3":
-                    staticrouteToAllDevices(listofDevToUse)
-                    break
-            
+                defaultRouteToAllDevices(listofDevToUse,usrInput)
+                break
+            elif usrInput == "1":
+                break
+            elif usrInput == "2":
+                bulkVlanCreate(listofDevToUse)
+                break
+            elif usrInput == "3":
+                staticrouteToAllDevices(listofDevToUse)
+                break
+        
         print("Invalid Input!")
     
 
@@ -536,105 +535,104 @@ def tftpUtils():
         elif usrInput.isnumeric():
             break
         print("Invalid Input!")
-    match usrInput:
-        case "0":
-           
-            deviceMenu = "Devices:  \n"
-            for c,dev in enumerate(listOfDevices):
-                deviceMenu += str(c) + ". " + dev.hostName + "\n"
-            deviceMenu += "Chose a device: "
+
+    if usrInput == "0":
+        deviceMenu = "Devices:  \n"
+        for c,dev in enumerate(listOfDevices):
+            deviceMenu += str(c) + ". " + dev.hostName + "\n"
+        deviceMenu += "Chose a device: "
+        usrInput = input(deviceMenu)
+        devToUse = netDevice()
+        while True:
+            if usrInput == "q":
+                return
+            try:
+                devToUse =  listOfDevices[int(usrInput)]
+                break
+            except:
+                print("Invalid Input!")
+                continue
+        deviceMenu = "Addresses:  \n"
+        addressList = getHostIp()
+        for c,ip in enumerate(addressList):
+            deviceMenu += str(c) + ". " + ip + "\n"
+        deviceMenu += "Chose an Address to Listen On( Q for Quit): "
+        
+        ipToUse = ""
+        while True:
             usrInput = input(deviceMenu)
-            devToUse = netDevice()
-            while True:
-                if usrInput == "q":
-                    return
-                try:
-                    devToUse =  listOfDevices[int(usrInput)]
-                    break
-                except:
-                    print("Invalid Input!")
-                    continue
-            deviceMenu = "Addresses:  \n"
-            addressList = getHostIp()
-            for c,ip in enumerate(addressList):
-                deviceMenu += str(c) + ". " + ip + "\n"
-            deviceMenu += "Chose an Address to Listen On( Q for Quit): "
-            
-            ipToUse = ""
-            while True:
-                usrInput = input(deviceMenu)
-                if usrInput == "q":
-                    return
-                try:
-                    ipToUse =  addressList[int(usrInput)]
-                    break
-                except:
-                    print("Invalid Input!")
-                    continue
-            coppyFileToDeviceFlash(devToUse,ipToUse,inventoryFile)
-        case "1":
-           
-            deviceMenu = "Devices:  \n"
-            for c,dev in enumerate(listOfDevices):
-                deviceMenu += str(c) + ". " + dev.hostName + "\n"
-            deviceMenu += "Chose a device: "
+            if usrInput == "q":
+                return
+            try:
+                ipToUse =  addressList[int(usrInput)]
+                break
+            except:
+                print("Invalid Input!")
+                continue
+        coppyFileToDeviceFlash(devToUse,ipToUse,inventoryFile)
+
+    elif usrInput == "1":
+        deviceMenu = "Devices:  \n"
+        for c,dev in enumerate(listOfDevices):
+            deviceMenu += str(c) + ". " + dev.hostName + "\n"
+        deviceMenu += "Chose a device: "
+        usrInput = input(deviceMenu)
+        devToUse = netDevice()
+        while True:
+            if usrInput == "q":
+                return
+            try:
+                devToUse =  listOfDevices[int(usrInput)]
+                break
+            except:
+                print("Invalid Input!")
+                continue
+        deviceMenu = "Addresses:  \n"
+        addressList = getHostIp()
+        for c,ip in enumerate(addressList):
+            deviceMenu += str(c) + ". " + ip + "\n"
+        deviceMenu += "Chose an Address to Listen On( Q for Quit): "
+        
+        ipToUse = ""
+        while True:
             usrInput = input(deviceMenu)
-            devToUse = netDevice()
-            while True:
-                if usrInput == "q":
-                    return
-                try:
-                    devToUse =  listOfDevices[int(usrInput)]
-                    break
-                except:
-                    print("Invalid Input!")
-                    continue
-            deviceMenu = "Addresses:  \n"
-            addressList = getHostIp()
-            for c,ip in enumerate(addressList):
-                deviceMenu += str(c) + ". " + ip + "\n"
-            deviceMenu += "Chose an Address to Listen On( Q for Quit): "
-            
-            ipToUse = ""
-            while True:
-                usrInput = input(deviceMenu)
-                if usrInput == "q":
-                    return
-                try:
-                    ipToUse =  addressList[int(usrInput)]
-                    break
-                except:
-                    print("Invalid Input!")
-                    continue
-            coppyFileFromDeviceToTFTP(devToUse,ipToUse,inventoryFile)
-            
-        case "2":
-            deviceMenu = ""
-            addressList = getHostIp()
-            for c,ip in enumerate(addressList):
-                deviceMenu += str(c) + ". " + ip + "\n"
-            deviceMenu += "Chose an Address to Listen On( Q for Quit): "
-            
-            ipToUse = ""
-            while True:
-                usrInput = input(deviceMenu)
-                if usrInput == "q":
-                    return
-                try:
-                    ipToUse =  addressList[int(usrInput)]
-                    break
-                except:
-                    print("Invalid Input!")
-                    continue
-            
-            global tftpServer
-            global tftpServerThread
-            tftp_server_dir = os.getcwd() + "\\" + inventoryFile.removesuffix(".json")
-            tftpServerThread,tftpServer = tftp_server_start(69,tftp_server_dir,ipToUse)
-            input("TFTP Running, Enter to stop...")
-            tftpServerStop(tftpServerThread,tftpServer)
-        case "3":
-           pass    
+            if usrInput == "q":
+                return
+            try:
+                ipToUse =  addressList[int(usrInput)]
+                break
+            except:
+                print("Invalid Input!")
+                continue
+        coppyFileFromDeviceToTFTP(devToUse,ipToUse,inventoryFile)
+    elif usrInput == "2":
+        deviceMenu = ""
+        addressList = getHostIp()
+        for c,ip in enumerate(addressList):
+            deviceMenu += str(c) + ". " + ip + "\n"
+        deviceMenu += "Chose an Address to Listen On( Q for Quit): "
+        
+        ipToUse = ""
+        while True:
+            usrInput = input(deviceMenu)
+            if usrInput == "q":
+                return
+            try:
+                ipToUse =  addressList[int(usrInput)]
+                break
+            except:
+                print("Invalid Input!")
+                continue
+        
+        global tftpServer
+        global tftpServerThread
+        tftp_server_dir = os.getcwd() + "\\" + inventoryFile.removesuffix(".json")
+        tftpServerThread,tftpServer = tftp_server_start(69,tftp_server_dir,ipToUse)
+        input("TFTP Running, Enter to stop...")
+        tftpServerStop(tftpServerThread,tftpServer)
+
+
+     
 
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
