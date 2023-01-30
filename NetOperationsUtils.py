@@ -39,7 +39,10 @@ def scan(subnet):
             
     while True:
         for c in range(len(listOfNames)):
-            print(f"{c}. {listOfNames[c]} | {listOfAddresses[c]}")
+            try:
+                print(f"{c}. {listOfNames[c]} | {listOfAddresses[c]}")
+            except:
+                pass
         usrInput = input("Chose your Interface: ")
         try:
             nameToUse = listOfNames[int(usrInput)]
