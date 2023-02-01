@@ -1,6 +1,9 @@
 import jsonpickle
 from classProvider import netDevice
 import re
+import numpy as np
+from PIL import Image
+ASCII_CHARS = ["@", "#", "＄", "%", "?", "*", "+", ";", ":", ",", "."]
 
 #Take the master lsit of netowrk devices, encode it as json with json pickle and save it to a txt
 def saveToInventoryFile(ListOfDevicesToSaveInInventoryFile,filename="inventory.json"):
@@ -107,3 +110,22 @@ def SaveConfigs(ListOfDevicesToSaveInInventoryFile: list[netDevice]):
 
 
 
+def convert_image_to_ascii(image_path, width=80, height=80,greyscale=False, ascii_chars=' .:-=+*#%@'):
+    image = Image.open(image_path).resize((width, height))
+    if greyscale:
+        image = image.convert('L')
+    ascii_image = []
+    for yPos in range(image.height):
+        for xPos in range(image.width):
+            pos = x, y = xPos, yPos
+            pixel = image.getpixel(pos)
+            color=(pixel[1]+pixel[2]+pixel[3])/3
+            ascii_image.append(ascii_chars[int(color / 256 * (len(ascii_chars) - 1))])
+        ascii_image.append("\n")
+    
+
+
+    with open('c:\\temp\\readme.txt', 'w') as f:
+        f.write(''.join(ascii_image))
+    return 
+    

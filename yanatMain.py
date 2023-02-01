@@ -38,6 +38,7 @@ from SerialUtils import serialRestoreFromTFTP
 from SSHutilities import coppyFileToDeviceFlash
 from SSHutilities import coppyFileFromDeviceToTFTP
 from SSHutilities import bulkVlanCreate
+from FileOperationsUtils import convert_image_to_ascii
 #importing third party and system libraries
 import socket
 import os
@@ -631,13 +632,15 @@ def tftpUtils():
         input("TFTP Running, Enter to stop...")
         tftpServerStop(tftpServerThread,tftpServer)
 
+def img2ascii():
+    print(convert_image_to_ascii("C:\\temp\\Logo.png",115,24))
 
      
 
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii}
 #multiline string for the user input menu
 
 
@@ -651,7 +654,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["I: "," Configure Interface On Device","Y: "," Connectivity Test, ping/trace(WARNING, can take a very long time)"],
 ["T: ","Serial Setup","R: ", "Ping Everything from Everywhere"],
 ["B: ","Bulk Config, simple config to all devices","TT: ", "Restore Configs From TFTP"],
-["TF: ","TFTP Utils Menue","ZZ: ","PLace Holder"],
+["TF: ","TFTP Utils Menue","ASC: ","IMG to ASCII"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 

@@ -990,7 +990,9 @@ def bulkVlanCreate(devsToCreateVlansOn:list[netDevice]):
             except:
                 pass
         print("Invlaid Input")
-
+    vlanNames = []
+    for vlan in vlansToCreate:
+        vlanNames.append(input(f"Vlan Info for vlan{vlan}").replace(" ",""))
     for dev in devsToCreateVlansOn:
         try:
             
@@ -1006,7 +1008,7 @@ def bulkVlanCreate(devsToCreateVlansOn:list[netDevice]):
             ssh.enable()
             ssh.config_mode()
             if dev.deviceType == "switch":
-                for vlan in vlansToCreate:
+                for vlan,i in enumerate(vlansToCreate):
 
                     createVlanInterface = False
                     enableVlanInterface = False
@@ -1057,11 +1059,16 @@ def bulkVlanCreate(devsToCreateVlansOn:list[netDevice]):
 
                     
 
-                    print(f"vlan{str(vlan)} -> {dev.hostName}")
+                    print(f"vlan{str(vlan)} | {vlanNames[i]} -> {dev.hostName}")
                     ssh.send_command_timing(f"vlan {str(vlan)}")
+                    try:
+                        ssh.send_command_timing(f"name {vlanNames[i]}")
+                    except:
+                        pass
                     ssh.send_command_timing("exit")
                     if createVlanInterface:
                         ssh.send_command_timing(f"interface vlan {str(vlan)}")
+                        
                         
                     if enableInterface:
                         ssh.send_command(f"ip address {ipAddress} {mask}")
