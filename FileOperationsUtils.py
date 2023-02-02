@@ -3,6 +3,11 @@ from classProvider import netDevice
 import re
 import numpy as np
 from PIL import Image
+from tkinter import filedialog
+from tkinter import *
+import os
+import tkinter.filedialog as fd
+import tkinter.messagebox as mb
 ASCII_CHARS = ["@", "#", "＄", "%", "?", "*", "+", ";", ":", ",", "."]
 
 #Take the master lsit of netowrk devices, encode it as json with json pickle and save it to a txt
@@ -109,6 +114,36 @@ def SaveConfigs(ListOfDevicesToSaveInInventoryFile: list[netDevice]):
         f.close()
 
 
+def browseFiles(path):
+
+
+    files = os.listdir(path)
+    while True:
+        print("Select a file or enter '..' to go up one directory:")
+        for i, file in enumerate(files):
+            print(f"{i + 1}. {file}")
+        selection = input("Enter the number of the file you want to select: ")
+        try:
+            index = int(selection) - 1
+            if 0 <= index < len(files):
+                file = files[index]
+                full_path = os.path.join(path, file)
+                if os.path.isdir(full_path):
+                    path = full_path
+                    files = os.listdir(path)
+                else:
+                    return full_path
+            else:
+                print("Invalid selection.")
+        except ValueError:
+            if selection == "..":
+                path = os.path.dirname(path)
+                files = os.listdir(path)
+            else:
+                print("Invalid selection.")
+	
+																						
+
 
 def convert_image_to_ascii(image_path, width=80, height=80,greyscale=False, ascii_chars=' .:-=+*#%@'):
     image = Image.open(image_path).resize((width, height))
@@ -127,5 +162,5 @@ def convert_image_to_ascii(image_path, width=80, height=80,greyscale=False, asci
 
     with open('c:\\temp\\readme.txt', 'w') as f:
         f.write(''.join(ascii_image))
-    return 
+    return ''.join(ascii_image)
     

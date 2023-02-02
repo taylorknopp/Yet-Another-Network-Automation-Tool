@@ -39,6 +39,8 @@ from SSHutilities import coppyFileToDeviceFlash
 from SSHutilities import coppyFileFromDeviceToTFTP
 from SSHutilities import bulkVlanCreate
 from FileOperationsUtils import convert_image_to_ascii
+from FileOperationsUtils import browseFiles
+
 #importing third party and system libraries
 import socket
 import os
@@ -633,7 +635,8 @@ def tftpUtils():
         tftpServerStop(tftpServerThread,tftpServer)
 
 def img2ascii():
-    print(convert_image_to_ascii("C:\\temp\\Logo.png",115,24))
+    path = browseFiles(os.getcwd())
+    print(convert_image_to_ascii(path,115,24))
 
      
 
