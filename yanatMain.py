@@ -518,6 +518,43 @@ def tftpRestore():
     serialRestoreFromTFTP(serialPort,controlPort,ipToUse,listOfDevices)
     tftpServerStop(tftpServerThread,tftpServer)
 
+def manualConsole():
+    global serialPort
+    global controlPort
+    print("Choose Port For Multiplexer Control")
+    controlPort = openSerialPort()
+    time.sleep(5)
+    os.system("lxterminal -e \"minicom Console\"")
+    selectedIndex = 1
+    serialPortToNumberDict = {1:'a',2:'b',3:'c',4:'d',5:'e',6:'f',7:'g',8:'h',9:'i',10:'j',11:'k',12:'l',13:'m',14:'n',15:'o',16:'p'}
+    
+    while True:
+        senCommand(controlPort,serialPortToNumberDict[selectedIndex])
+        for i in range(1,9):
+            if selectedIndex == i:
+                print(f"[{serialPortToNumberDict[i]}]. {i}")
+            else:
+                print(f"{serialPortToNumberDict[i]}. {i}")
+        usrInput = input("Select port or Q for quit: ").lower()
+        if usrInput == "q":
+            break
+        elif usrInput.isnumeric():
+            try:
+                if int(usrInput) in serialPortToNumberDict.keys():
+                    selectedIndex = int(usrInput)
+                    continue
+                else:
+                    print("Invalid Input")
+                    continue
+            except:
+                print("Invalid Input")
+                continue
+        else:
+            print("Invlaid Input")
+            continue
+        
+
+
 
 
 def tftpUtils():
@@ -643,7 +680,7 @@ def img2ascii():
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole}
 #multiline string for the user input menu
 
 
@@ -658,6 +695,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["T: ","Serial Setup","R: ", "Ping Everything from Everywhere"],
 ["B: ","Bulk Config, simple config to all devices","TT: ", "Restore Configs From TFTP"],
 ["TF: ","TFTP Utils Menue","ASC: ","IMG to ASCII"],
+["MC: ","Manual Serial Console", "ZZ: ","Place Holder"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 
