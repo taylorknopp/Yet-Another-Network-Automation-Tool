@@ -52,6 +52,7 @@ from netifaces import interfaces, ifaddresses, AF_INET
 import tftpy
 import signal 
 import sys
+from subprocess import Popen
 
     
 
@@ -525,12 +526,12 @@ def manualConsole():
     controlPort = openSerialPort()
     time.sleep(5)
     minicomCommand = ["lxterminal","-e","\"minicom","Console\""]
-    os.spawnlp(os.P_NOWAIT, *minicomCommand)
+    Popen(minicomCommand)
     selectedIndex = 1
     serialPortToNumberDict = {1:'a',2:'b',3:'c',4:'d',5:'e',6:'f',7:'g',8:'h',9:'i',10:'j',11:'k',12:'l',13:'m',14:'n',15:'o',16:'p'}
     
     while True:
-        senCommand(controlPort,serialPortToNumberDict[selectedIndex])
+        controlPort.write(serialPortToNumberDict[selectedIndex].encode('utf-8'))
         for i in range(1,9):
             if selectedIndex == i:
                 print(f"[{serialPortToNumberDict[i]}]. {i}")
