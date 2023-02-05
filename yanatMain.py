@@ -525,20 +525,34 @@ def manualConsole():
     print("Choose Port For Multiplexer Control")
     controlPort = openSerialPort()
     time.sleep(5)
-    minicomCommand = ["lxterminal", "-e", "minicom Console"]
-    Popen(minicomCommand)
+    try:
+        minicomCommand = ["lxterminal", "-e", "minicom Console"]
+        Popen(minicomCommand)
+    except:
+        pass
     selectedIndex = 1
     serialPortToNumberDict = {1:'a',2:'b',3:'c',4:'d',5:'e',6:'f',7:'g',8:'h',9:'i',10:'j',11:'k',12:'l',13:'m',14:'n',15:'o',16:'p'}
-    
+    letterToHostNameDict = {}
+    for i in range(1,9):
+        for dev in listOfDevices:
+            if dev.serialPortAssociation.lower() == serialPortToNumberDict[i]:
+                letterToHostNameDict[serialPortToNumberDict[i]] = dev.hostName
+                break
     while True:
         controlPort.write(serialPortToNumberDict[selectedIndex].encode('utf-8'))
         for i in range(1,9):
+            hostName = "???????"
+            try:
+                hostName = letterToHostNameDict[serialPortToNumberDict[i]]
+            except:
+                pass
             if selectedIndex == i:
-                print(f"[{serialPortToNumberDict[i]}]. {i}")
+                print(f"[{serialPortToNumberDict[i]}] -> {hostName}. {i}")
             else:
-                print(f"{serialPortToNumberDict[i]}. {i}")
+                print(f"{serialPortToNumberDict[i]} -> {hostName}. {i}")
         usrInput = input("Select port or Q for quit: ").lower()
         if usrInput == "q":
+            controlPort.close()
             break
         elif usrInput.isnumeric():
             try:
