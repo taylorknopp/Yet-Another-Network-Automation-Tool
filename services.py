@@ -2,13 +2,20 @@ import tftpy
 import threading
 import time
 import os
+import platform
+import sys
 def tftp_server_start(port, tftp_server_dir,ip):
-    CHECK_FOLDER = os.path.isdir(tftp_server_dir + "\\tftp\\")
+    if sys.platform == 'win32':
+        tftp_server_dir += "\\tftp\\"
+    else:
+        tftp_server_dir += "/tftp/"
+
+    CHECK_FOLDER = os.path.isdir(tftp_server_dir)
 
 # If folder doesn't exist, then create it.
     if not CHECK_FOLDER:
-        os.makedirs(tftp_server_dir + "\\tftp\\")
-    server = tftpy.TftpServer(tftp_server_dir + "\\tftp\\")
+        os.makedirs(tftp_server_dir)
+    server = tftpy.TftpServer(tftp_server_dir)
     
     server_thread = threading.Thread(target=server.listen,
                                          kwargs={'listenip': ip,

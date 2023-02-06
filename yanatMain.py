@@ -62,6 +62,8 @@ serialPort = ""
 controlPort = ""
 tftpServerThread = None
 tftpServer = None
+baseDir = ""
+startDir= ""
 #handler for dealing with ctrl-c interupt
 def handler(signum, frame):
     msg = "Ctrl-c was pressed. Exeting! "
@@ -250,7 +252,15 @@ def InventoryFileSetupAndSave():
         print(path) 
           
     print(path)
+    if not ".json" in inventoryFile:
+        inventoryFile += ".json"
     saveToInventoryFile(listOfDevices,inventoryFile)
+    global baseDir
+    global startDir
+    if sys.platform == "win32":
+        baseDir = startDir + "\\" + inventoryFile.replace(".json","")
+    else:
+        baseDir = startDir + "/" + inventoryFile.replace(".json","")
 #call the file operations load inventory function
 def loadInventory():
     global inventoryFile
@@ -269,8 +279,15 @@ def loadInventory():
             break
         else:
             print("Invalid input")
-    
-    listOfDevices = loadInventoryFromFile(inventoryFile)  
+    if not ".json" in inventoryFile:
+        inventoryFile += ".json"
+    listOfDevices = loadInventoryFromFile(inventoryFile)
+    global baseDir
+    global startDir
+    if sys.platform == "win32":
+        baseDir = startDir + "\\" + inventoryFile.replace(".json","")
+    else:
+        baseDir = startDir + "/" + inventoryFile.replace(".json","")
 #call the sshUtils configure inventory function
 def configInt():
     global listOfDevices
@@ -399,7 +416,7 @@ def tftpBackup():
         except:
             print("Invalid Input!")
             continue
-    tftpServerThread,tftpServer = tftp_server_start(69,os.getcwd(),ipToUse)
+    tftpServerThread,tftpServer = tftp_server_start(69,baseDir,ipToUse)
     backupAllDevsToTftp(listOfDevices,ipToUse)
     tftpServerStop(tftpServerThread,tftpServer)
 
@@ -504,7 +521,7 @@ def tftpRestore():
         except:
             print("Invalid Input!")
             continue
-    tftpServerDir = os.getcwd() + inventoryFile.removesuffix(".json")
+    tftpServerDir = baseDir
     tftpServerThread,tftpServer = tftp_server_start(69,tftpServerDir,ipToUse)
 
     global serialPort
@@ -643,7 +660,8 @@ def img2ascii():
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,
+    'ss':tftpBackup,'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii}
 #multiline string for the user input menu
 
 
@@ -664,11 +682,15 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 
 #Main user input function
 def main():
+    global baseDir
+    global startDir
+    baseDir = os.getcwd()
+    startDir = os.getcwd()
     while True:
         headers = ["Address","Hostname","Interfaces","Type","S/N","Username","Management Port","RestConf Available","RestConf Configured","Serial Port"]
         table = []
         print("Inventory: " + inventoryFile)
-        print("Devices: ")
+        print("Base Directory: " + baseDir)
         for dev in listOfDevices:
                 try:
                     numPorts = len(dev.ports)
