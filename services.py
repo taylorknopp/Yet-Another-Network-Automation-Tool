@@ -20,7 +20,8 @@ def tftp_server_start(port, tftp_server_dir,ip):
     
     server_thread = threading.Thread(target=server.listen,
                                          kwargs={'listenip': ip,
-                                                 'listenport': port})
+                                                 'listenport': port,
+                                                 'timeout':100})
     server_thread.start()
     
     
