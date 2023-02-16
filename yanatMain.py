@@ -745,7 +745,7 @@ def img2ascii():
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
     'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,
-    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole, "zz": netBoxQuery}
+    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole}
 #multiline string for the user input menu
 
 
