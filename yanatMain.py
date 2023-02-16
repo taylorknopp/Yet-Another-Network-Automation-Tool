@@ -53,6 +53,7 @@ import tftpy
 import signal 
 import sys
 from subprocess import Popen
+import pynetbox
 
     
 
@@ -708,12 +709,43 @@ def img2ascii():
     path = browseFiles(os.getcwd())
     print(convert_image_to_ascii(path,115,24))
 
-     
+def netBoxQuery():
+    nb = pynetbox.api(
+    'http://192.168.3.111:8001',
+    token='0123456789abcdef0123456789abcdef01234567'
+    )
+    devices = nb.dcim.devices.all()
+    
+    for dev in devices:
+        print(dev.name)
+        print("     ID: " + str(dev.id))
+        print("     ROLE: " + str(dev.device_role))
+        print("     SN:" + str(dev.serial))
+        print("     Site:" + str(dev.site))
+        print("     PIP:" + str(dev.primary_ip))
+        print("     url:" + str(dev.url))
+        interfaces = nb.dcim.interfaces.filter(device=dev.name)
+        print("     Interfaces:")
+        for interface in interfaces:
+            addresses = nb.ipam.ip_addresses.filter(assigned_object_id=interface.id)
+            for address in addresses:
+                try:
+                    if address.assigned_object_id == interface.id:
+                        print("         Name:" + interface.name + " - " + address.address)
+                except:
+                    pass
+            
+
+            
+
+    
+    input(".......")
 
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
-    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole}
+    'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,
+    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole, "zz": netBoxQuery}
 #multiline string for the user input menu
 
 
@@ -728,7 +760,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["T: ","Serial Setup","R: ", "Ping Everything from Everywhere"],
 ["B: ","Bulk Config, simple config to all devices","TT: ", "Restore Configs From TFTP"],
 ["TF: ","TFTP Utils Menue","ASC: ","IMG to ASCII"],
-["MC: ","Manual Serial Console", "ZZ: ","Place Holder"],
+["MC: ","Manual Serial Console", "ZZ: ","netboxTest"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 
