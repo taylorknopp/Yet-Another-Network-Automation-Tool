@@ -53,7 +53,7 @@ import tftpy
 import signal 
 import sys
 from subprocess import Popen
-import pynetbox
+#import pynetbox
 
     
 
@@ -709,7 +709,7 @@ def img2ascii():
     path = browseFiles(os.getcwd())
     print(convert_image_to_ascii(path,115,24))
 
-def netBoxQuery():
+""" def netBoxQuery():
     nb = pynetbox.api(
     'http://192.168.3.111:8001',
     token='0123456789abcdef0123456789abcdef01234567'
@@ -733,13 +733,13 @@ def netBoxQuery():
                     if address.assigned_object_id == interface.id:
                         print("         Name:" + interface.name + " - " + address.address)
                 except:
-                    pass
+                    pass """
             
 
             
 
     
-    input(".......")
+    #input(".......")
 
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
