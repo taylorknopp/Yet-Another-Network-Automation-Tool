@@ -66,6 +66,7 @@ def senCommandToControl(port: serial.Serial,command: str):
     return read
 
 def bypassSetupWizzard(port: serial.Serial):
+    print("WizzardBypass")
     port.flushInput()
     port.flushOutput()
     port.write("no\r".encode("utf-8"))
@@ -85,6 +86,7 @@ def bypassSetupWizzard(port: serial.Serial):
             
 
 def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
+    print("InicialSerialSettup")
     port.flushInput()
     port.flushOutput()
     out = senCommand(port,"\r")
@@ -134,6 +136,7 @@ def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Se
         print(senCommandToControl(portForControl,dev.serialPortAssociation.lower()))
         time.sleep(5)
         initialSetupOverSerial(portForConfig,dev)
+        print("PostSerialSettup")
         print(senCommand(portForConfig,"exit"))
         print(senCommand(portForConfig,"exit"))
         print(senCommand(portForConfig,"copy tftp run vrf Mgmt-vrf"))
