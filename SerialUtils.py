@@ -90,9 +90,16 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
     port.flushInput()
     port.flushOutput()
     out = senCommand(port,"\r")
+    time.sleep(5)
     if "[yes/no]" in out:
         bypassSetupWizzard(port)
     print()
+    out = senCommand(port,"\r")
+    time.sleep(5)
+    out = senCommand(port,"\r")
+    time.sleep(5)
+    out = senCommand(port,"\r")
+    time.sleep(5)
 
 
     print(senCommand(port,"en"))
