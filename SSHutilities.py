@@ -37,10 +37,7 @@ def updateDevice(CiscoDevice: netDevice):
 
 
 
-        serialNumber = ""
-
-        if serialNumber == "":
-            serialNumber = ssh.send_command("show version",use_textfsm=True)[0]["serial"][0]
+        serialNumber = ssh.send_command("show version",use_textfsm=True)[0]["serial"][0]
         CiscoDevice.hostName = Hostname
         CiscoDevice.deviceType = "router"
 
