@@ -135,7 +135,7 @@ def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Se
         time.sleep(5)
         initialSetupOverSerial(portForConfig,dev)
         print(senCommand(portForConfig,"exit"))
-        print(senCommand(portForConfig,"copy tftp: run vrf Mgmt-vrf"))
+        print(senCommand(portForConfig,"copy tftp run vrf Mgmt-vrf"))
         print(senCommand(portForConfig,ip))
         print(senCommand(portForConfig,f"{dev.hostName}.ios"))
         print(senCommand(portForConfig,""))
