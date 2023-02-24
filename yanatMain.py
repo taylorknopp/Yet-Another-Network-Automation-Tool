@@ -53,7 +53,7 @@ import tftpy
 import signal 
 import sys
 from subprocess import Popen
-#import pynetbox
+import pynetbox
 
     
 
@@ -709,7 +709,7 @@ def img2ascii():
     path = browseFiles(os.getcwd())
     print(convert_image_to_ascii(path,115,24))
 
-""" def netBoxQuery():
+def netBoxQuery():
     nb = pynetbox.api(
     'http://192.168.3.111:8001',
     token='0123456789abcdef0123456789abcdef01234567'
@@ -725,15 +725,14 @@ def img2ascii():
         print("     PIP:" + str(dev.primary_ip))
         print("     url:" + str(dev.url))
         interfaces = nb.dcim.interfaces.filter(device=dev.name)
-        print("     Interfaces:")
         for interface in interfaces:
-            addresses = nb.ipam.ip_addresses.filter(assigned_object_id=interface.id)
-            for address in addresses:
-                try:
-                    if address.assigned_object_id == interface.id:
-                        print("         Name:" + interface.name + " - " + address.address)
-                except:
-                    pass """
+            #print(interface.display)
+            if interface.display.lower() == "g0/0 (managementinterface)":
+               
+            
+                print("     manageInterface: " + str(interface.display))
+    input()
+            
             
 
             
@@ -745,7 +744,7 @@ def img2ascii():
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
     'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,
-    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole}
+    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole,"zz":netBoxQuery}
 #multiline string for the user input menu
 
 
