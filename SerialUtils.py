@@ -107,6 +107,35 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
     print(senCommand(port,f"interface {dev.ManagementPortName}"))
     print(senCommand(port,f"ip address {dev.managementAddress} 255.255.255.0"))
     print(senCommand(port,"no shutdown"))
+    print(senCommand("do show ip interface brief"))
+    print(senCommand(""))
+    print(senCommand(""))
+    print(senCommand(""))
+    print(senCommand(""))
+    print(senCommand(""))
+    print(senCommand(""))
+    usrInput = ""
+    while True:
+        usrInput = input("Does it look like the managementport was configured corectly? Y/N").lower()
+        if usrInput == "y":
+            break
+        elif usrInput == "no":
+            print("Trying Again...")
+            time.sleep(5)
+            print(senCommand(port,f"interface {dev.ManagementPortName}"))
+            print(senCommand(port,f"ip address {dev.managementAddress} 255.255.255.0"))
+            print(senCommand(port,"no shutdown"))
+            print(senCommand("do show ip interface brief"))
+            print(senCommand(""))
+            print(senCommand(""))
+            print(senCommand(""))
+            print(senCommand(""))
+            print(senCommand(""))
+            print(senCommand(""))
+        else:
+            print("Invalid input.")
+            
+
     read = ""
     while True:
         oldLen = len(read)
