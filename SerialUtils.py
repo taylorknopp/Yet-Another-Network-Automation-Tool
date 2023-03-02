@@ -104,9 +104,6 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
 
     print(senCommand(port,"en"))
     print(senCommand(port,"config t"))
-    print(senCommand(port,f"interface {dev.ManagementPortName}"))
-    print(senCommand(port,f"ip address {dev.managementAddress} 255.255.255.0"))
-    print(senCommand(port,"no shutdown"))
     print(senCommand("do show ip interface brief"))
     print(senCommand(""))
     print(senCommand(""))
