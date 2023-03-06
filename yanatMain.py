@@ -40,7 +40,7 @@ from SSHutilities import coppyFileFromDeviceToTFTP
 from SSHutilities import bulkVlanCreate
 from FileOperationsUtils import convert_image_to_ascii
 from FileOperationsUtils import browseFiles
-
+from services import DHCPSetupWindows
 #importing third party and system libraries
 import socket
 import os
@@ -744,7 +744,7 @@ def netBoxQuery():
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
     'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,
-    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole,"zz":netBoxQuery}
+    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole,"zz":DHCPSetupWindows}
 #multiline string for the user input menu
 
 
@@ -775,6 +775,7 @@ def main():
         table = []
         print("Inventory: " + inventoryFile)
         print("Base Directory: " + baseDir)
+        print("CWD:" + os.getcwd())
         for dev in listOfDevices:
                 try:
                     numPorts = len(dev.ports)

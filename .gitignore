@@ -3,6 +3,7 @@
 /yanatVenv/*
 *.ios
 /tftp
+/DHCP
 __pycache__/
 *.py[cod]
 *$py.class
