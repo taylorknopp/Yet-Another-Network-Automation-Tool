@@ -126,6 +126,9 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
             print(senCommand("\r"))
             print(senCommand("\r"))
             print(senCommand("\r"))
+            print(senCommand("\r"))
+            print(senCommand("\r"))
+            print(senCommand("\r"))
         else:
             print("Invalid input.")
             

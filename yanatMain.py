@@ -66,6 +66,7 @@ tftpServerThread = None
 tftpServer = None
 baseDir = ""
 startDir= ""
+tftpRunning = False
 #handler for dealing with ctrl-c interupt
 def handler(signum, frame):
     msg = "Ctrl-c was pressed. Exeting! "
@@ -418,9 +419,12 @@ def tftpBackup():
         except:
             print("Invalid Input!")
             continue
-    tftpServerThread,tftpServer = tftp_server_start(69,baseDir,ipToUse)
+    if not tftpRunning:
+        
+        tftpServerThread,tftpServer = tftp_server_start(69,baseDir,ipToUse)
+        tftpRunning = True
     backupAllDevsToTftp(listOfDevices,ipToUse)
-    tftpServerStop(tftpServerThread,tftpServer)
+    
 
 def bulkConfig():
     global listOfDevices
@@ -524,7 +528,9 @@ def tftpRestore():
             print("Invalid Input!")
             continue
     tftpServerDir = baseDir
-    tftpServerThread,tftpServer = tftp_server_start(69,tftpServerDir,ipToUse)
+    if not tftpRunning:
+        tftpServerThread,tftpServer = tftp_server_start(69,tftpServerDir,ipToUse)
+        tftpRunning = True
 
     global serialPort
     global controlPort
@@ -700,9 +706,15 @@ def tftpUtils():
         
         global tftpServer
         global tftpServerThread
-        tftp_server_dir = os.getcwd() + "\\" + inventoryFile.removesuffix(".json")
-        tftpServerThread,tftpServer = tftp_server_start(69,tftp_server_dir,ipToUse)
-        input("TFTP Running, Enter to stop...")
+        if not tftpRunning:
+
+            tftp_server_dir = os.getcwd() + "\\" + inventoryFile.removesuffix(".json")
+            tftpServerThread,tftpServer = tftp_server_start(69,tftp_server_dir,ipToUse)
+        input("TFTP Running In BackGroud, Enter to Return To Menue...")
+        
+def stoptftp():
+        global tftpServer
+        global tftpServerThread
         tftpServerStop(tftpServerThread,tftpServer)
 
 def img2ascii():
@@ -744,7 +756,7 @@ def netBoxQuery():
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
     'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,
-    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole,"zz":DHCPSetupWindows}
+    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole,"zz":stoptftp}
 #multiline string for the user input menu
 
 
@@ -759,7 +771,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["T: ","Serial Setup","R: ", "Ping Everything from Everywhere"],
 ["B: ","Bulk Config, simple config to all devices","TT: ", "Restore Configs From TFTP"],
 ["TF: ","TFTP Utils Menue","ASC: ","IMG to ASCII"],
-["MC: ","Manual Serial Console", "ZZ: ","netboxTest"],
+["MC: ","Manual Serial Console", "ZZ: ","Stop TFTP"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 
