@@ -402,6 +402,7 @@ def addNewDev():
 def tftpBackup():
     global tftpServer
     global tftpServerThread
+    global tftpRunning
     deviceMenu = "Addresses:  \n"
     addressList = getHostIp()
     for c,ip in enumerate(addressList):
@@ -509,6 +510,7 @@ def bulkConfig():
 def tftpRestore():
     global tftpServer
     global tftpServerThread
+    global tftpRunning
     deviceMenu = "Addresses:  \n"
     addressList = getHostIp()
     for c,ip in enumerate(addressList):
@@ -706,6 +708,7 @@ def tftpUtils():
         
         global tftpServer
         global tftpServerThread
+        global tftpRunning
         if not tftpRunning:
 
             tftp_server_dir = os.getcwd() + "\\" + inventoryFile.removesuffix(".json")
