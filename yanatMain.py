@@ -41,6 +41,7 @@ from SSHutilities import bulkVlanCreate
 from FileOperationsUtils import convert_image_to_ascii
 from FileOperationsUtils import browseFiles
 from services import DHCPSetupWindows
+from classProvider import settingsHolderClass
 #importing third party and system libraries
 import socket
 import os
@@ -54,6 +55,7 @@ import signal
 import sys
 from subprocess import Popen
 import pynetbox
+import getpass
 
     
 
@@ -67,6 +69,9 @@ tftpServer = None
 baseDir = ""
 startDir= ""
 tftpRunning = False
+settings = settingsHolderClass()
+ssoPassword = ""
+gitPassword = ""
 #handler for dealing with ctrl-c interupt
 def handler(signum, frame):
     msg = "Ctrl-c was pressed. Exeting! "
@@ -257,9 +262,11 @@ def InventoryFileSetupAndSave():
     print(path)
     if not ".json" in inventoryFile:
         inventoryFile += ".json"
-    saveToInventoryFile(listOfDevices,inventoryFile)
+    global settings
+    saveToInventoryFile(listOfDevices,settings,inventoryFile)
     global baseDir
     global startDir
+   
     if sys.platform == "win32":
         baseDir = startDir + "\\" + inventoryFile.replace(".json","")
     else:
@@ -268,6 +275,7 @@ def InventoryFileSetupAndSave():
 def loadInventory():
     global inventoryFile
     global listOfDevices
+    global settings
     usrInput = ""
     while True:
         usrInput = input("Please enter file path or blank to use the exsiting path: ")
@@ -284,7 +292,7 @@ def loadInventory():
             print("Invalid input")
     if not ".json" in inventoryFile:
         inventoryFile += ".json"
-    listOfDevices = loadInventoryFromFile(inventoryFile)
+    listOfDevices,settings = loadInventoryFromFile(inventoryFile)
     global baseDir
     global startDir
     if sys.platform == "win32":
@@ -755,11 +763,26 @@ def netBoxQuery():
     
     #input(".......")
 
+def settingsSetup():
+    global settings
+    settings.GitURL = input("Git URL: ")
+    settings.GitUsername = input("Git Username: ")
+    settings.SSOUsername = input("SSO/Radius Username: ")
+    
+
+def setPass():
+    global ssoPassword
+    global gitPassword
+    ssoPassword = getpass.getpass("SSO/RAdius Password: ")
+    gitPassword = getpass.getpass("Git Account Password Password: ")
+
+
+
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
     'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,
-    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole,"zz":stoptftp}
+    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole,"zz":stoptftp,"st":settingsSetup,"sp":setPass}
 #multiline string for the user input menu
 
 
@@ -775,6 +798,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["B: ","Bulk Config, simple config to all devices","TT: ", "Restore Configs From TFTP"],
 ["TF: ","TFTP Utils Menue","ASC: ","IMG to ASCII"],
 ["MC: ","Manual Serial Console", "ZZ: ","Stop TFTP"],
+["ST: ","Set Settings", "SP: ","Set Passwords"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
 
 
@@ -786,11 +810,27 @@ def main():
     baseDir = os.getcwd()
     startDir = os.getcwd()
     while True:
+        global settings
+        global ssoPassword
+        global gitPassword
         headers = ["Address","Hostname","Interfaces","Type","S/N","Username","Management Port","RestConf Available","RestConf Configured","Serial Port"]
         table = []
         print("Inventory: " + inventoryFile)
         print("Base Directory: " + baseDir)
         print("CWD:" + os.getcwd())
+        SecurePass = ""
+        for i in range(0,len(gitPassword)):
+            SecurePass += "*"
+        
+
+        print("Git URL: " + settings.GitURL)
+        print("Git Username: " + settings.GitUsername + " | GitPassword: " + SecurePass)
+        SecurePass = ""
+        for i in range(0,len(ssoPassword)):
+            SecurePass += "*"
+        print("SSO/Radius Username: " + settings.GitURL + " | SSOPassword: " + SecurePass)
+       
+        
         for dev in listOfDevices:
                 try:
                     numPorts = len(dev.ports)

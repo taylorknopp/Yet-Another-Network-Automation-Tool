@@ -50,3 +50,10 @@ class vlanInterface():
 
 
         
+class settingsHolderClass():
+    def __init__(self):
+        self.GitURL = "0.0.0.0"
+        self.SSOUsername = ""
+        self.GitUsername = "::0"
+        self.useSSO = False
+        

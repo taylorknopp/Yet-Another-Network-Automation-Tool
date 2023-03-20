@@ -8,13 +8,18 @@ from tkinter import *
 import os
 import tkinter.filedialog as fd
 import tkinter.messagebox as mb
+from classProvider import settingsHolderClass
 ASCII_CHARS = ["@", "#", "＄", "%", "?", "*", "+", ";", ":", ",", "."]
 
 #Take the master lsit of netowrk devices, encode it as json with json pickle and save it to a txt
-def saveToInventoryFile(ListOfDevicesToSaveInInventoryFile,filename="inventory.json"):
+def saveToInventoryFile(ListOfDevicesToSaveInInventoryFile,settings,filename="inventory.json"):
     listAsJson = jsonpickle.encode(ListOfDevicesToSaveInInventoryFile)
+    settingsAsJson = jsonpickle.encode(settings)
     f = open(filename, "w")
     f.write(listAsJson)
+    f.close()
+    f = open("Settings-"+filename, "w")
+    f.write(settingsAsJson)
     f.close()
 
 
@@ -22,6 +27,26 @@ def saveToInventoryFile(ListOfDevicesToSaveInInventoryFile,filename="inventory.j
 def loadInventoryFromFile(filename="inventory.json"):
     f = open(filename,"r")
     inventoryJson = f.read()
+    f.close()
+    settings = settingsHolderClass()
+    try:
+        f = open("Settings-"+filename,"r")
+        settingsAsJson = f.read()
+        settings = jsonpickle.decode(settingsAsJson)
+
+        f.close()
+    except:
+        print("Settigns Fiole Not Found")
+        settingsAsJson = ""
+    
+
+
+
+
+
+
+
+
     objectsList = list[netDevice]
     if not inventoryJson == "":
         objectsList = jsonpickle.decode(inventoryJson)
@@ -53,7 +78,7 @@ def loadInventoryFromFile(filename="inventory.json"):
                     print("Secret cannot be blank.")
 
 
-    return objectsList.copy()
+    return objectsList.copy() , settings
 
 
 
