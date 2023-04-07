@@ -705,6 +705,45 @@ def rPingFromDevs(devs:list[netDevice]):
     timeTaken = endtTime-startTime
     print("Time Taken: " + str(timeTaken))
 
+
+def pingListFromAllDevs(devs:list[netDevice]):
+    otherTHingsToPing = []
+    headers = [" "]
+    
+    #list for containing subsequent lists of ping results for eatch device interface wiht an address
+    pings = []
+    for dev in devs:
+        headers.append(dev.hostName)
+    while True:
+        for ip in otherTHingsToPing:
+            print(ip)
+        ip = input("Extra IPs To Ping(blank to continue): ")
+        if ip == "":
+            break
+        elif validateIp(ip):
+            otherTHingsToPing.append(ip)
+            continue
+        print("Invalid Input!")
+    
+    for ip in otherTHingsToPing:
+        rowForDev = []
+        rowForDev.append(ip)
+        for dev in devs:
+        
+            result = pingFromDev(dev,ip)
+            outList = result.split("\n")
+            if "Sending" in outList[2] and len(outList) >= 4:
+                pingResul = outList[3]
+            elif "Sending" in outList[2] and not len(outList) >= 4:
+                pingResul = "Error" 
+            else:
+                pingResul = outList[2]
+            
+            rowForDev.append(pingResul)
+        pings.append(rowForDev)
+    print(tabulate(pings,headers,tablefmt="simple_grid"))
+    input("Continue?")
+
 def pingListFromDev(listOfInfo: list):
     dev = listOfInfo[0]
     dictOfDevices = listOfInfo[1]

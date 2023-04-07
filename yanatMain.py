@@ -42,6 +42,7 @@ from FileOperationsUtils import convert_image_to_ascii
 from FileOperationsUtils import browseFiles
 from services import DHCPSetupWindows
 from classProvider import settingsHolderClass
+from SSHutilities import pingListFromAllDevs
 #importing third party and system libraries
 import socket
 import os
@@ -776,13 +777,15 @@ def setPass():
     ssoPassword = getpass.getpass("SSO/RAdius Password: ")
     gitPassword = getpass.getpass("Git Account Password Password: ")
 
-
+def pingList():
+    global listOfDevices
+    pingListFromAllDevs(listOfDevices)
 
 #A dictionary containing refernces to the functions, used for a more smaller more slimlined user input system. 
 menueInputToFunctionMap = {'a':scanNet,'g':BuildInventory,'c':configureRouting, 'd': backupConfigs, 
 'e': extractConfigs, 'x':wipeDevices,'y': testConectivity,'s':InventoryFileSetupAndSave ,'l':loadInventory,
     'i':configInt,'h':setHostnameOfDev,'ac':applyConfigFromInventory,'nt': neighborTableView,'sc':saveAllConfigs,'r':rPing,'t':serialSetup,'aa':addNewDev,'ss':tftpBackup,
-    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"asc":img2ascii,"mc":manualConsole,"zz":stoptftp,"st":settingsSetup,"sp":setPass}
+    'b':bulkConfig,'tt':tftpRestore,"tf":tftpUtils,"pl":pingList,"mc":manualConsole,"zz":stoptftp,"st":settingsSetup,"sp":setPass}
 #multiline string for the user input menu
 
 
@@ -796,7 +799,7 @@ MenueTableList = [["A: "," Scan","S: "," Save Inventory File"],
 ["I: "," Configure Interface On Device","Y: "," Connectivity Test, ping/trace(WARNING, can take a very long time)"],
 ["T: ","Serial Setup","R: ", "Ping Everything from Everywhere"],
 ["B: ","Bulk Config, simple config to all devices","TT: ", "Restore Configs From TFTP"],
-["TF: ","TFTP Utils Menue","ASC: ","IMG to ASCII"],
+["TF: ","TFTP Utils Menue","PL: ","Ping List From All Devices"],
 ["MC: ","Manual Serial Console", "ZZ: ","Stop TFTP"],
 ["ST: ","Set Settings", "SP: ","Set Passwords"],
 ["L: "," Load Inventory File","Q: "," Quit"]]
