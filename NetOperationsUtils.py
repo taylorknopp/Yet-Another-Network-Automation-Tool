@@ -56,6 +56,7 @@ def scan(subnet):
 
     
 
+        ArpHost(device_ip,nameToUse)
         loss = ArpHost(device_ip,nameToUse)
         if len(loss) > 0:
             newDevice = netDevice()

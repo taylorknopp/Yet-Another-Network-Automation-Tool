@@ -1,6 +1,7 @@
 import netmiko
 from classProvider import netDevice
 from classProvider import networkPort
+from IpTools import validateIp
 import IpTools
 # import the requests library
 import requests
@@ -430,6 +431,7 @@ def pingFromDev(dev:netDevice,ip):
     ssh.enable()
     out = ssh.send_command_timing("ping " + ip)
     print(out)
+    return out
 #ssh into a devcie and attempt to traceroute an address fomr that device
 def traceFromDev(dev:netDevice,ip):
     try:
@@ -614,8 +616,25 @@ def showEigrpNeighborsAlDev(devs:list[netDevice]):
         input("Enter for Next: ")
 
 def rPingFromDevs(devs:list[netDevice]):
+    otherTHingsToPing = []
+    while True:
+        for ip in otherTHingsToPing:
+            print(ip)
+        ip = input("Extra IPs To Ping(blank to continue): ")
+        if ip == "":
+            break
+        elif validateIp(ip):
+            otherTHingsToPing.append(ip)
+            continue
+        print("Invalid Input!")
+
+
+    
+    
     #Header list for building table
+    
     headers = [" "]
+    
     #list for containing subsequent lists of ping results for eatch device interface wiht an address
     pings = []
     startTime = time.time()
@@ -657,6 +676,25 @@ def rPingFromDevs(devs:list[netDevice]):
                     continue
                 listOfResultsForThisINterface.append(resultsDict[device][interface.ipAddress])
             pings.append(listOfResultsForThisINterface)
+    
+    for ip in otherTHingsToPing:
+        rowForDev = []
+        rowForDev.append(ip)
+        for dev in devs:
+        
+            result = pingFromDev(dev,ip)
+            outList = result.split("\n")
+            if "Sending" in outList[2] and len(outList) >= 4:
+                pingResul = outList[3]
+            elif "Sending" in outList[2] and not len(outList) >= 4:
+                pingResul = "Error" 
+            else:
+                pingResul = outList[2]
+            
+            rowForDev.append(pingResul)
+        pings.append(rowForDev)
+        
+
 
 
 
@@ -671,7 +709,10 @@ def pingListFromDev(listOfInfo: list):
     dev = listOfInfo[0]
     dictOfDevices = listOfInfo[1]
     DictOfResults = {}
-
+    cloudFlareInt = networkPort()
+    cloudFlareInt.name = "CloudFlare"
+    cloudFlareInt.ipAddress = "1.1.1.1"
+    #dictOfDevices["Cloudflare | 1.1.1.1"] = cloudFlareInt
     for key in dictOfDevices.keys():
         interface = dictOfDevices[key]
         DeviceInfo = {
