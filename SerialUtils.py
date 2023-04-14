@@ -113,7 +113,9 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice,tftpIp:str):
     pingCount = 0;
     while True:
         pingCount += 1
+        print(f"Pinging {tftpIp}")
         pingResults = senCommand(port, pingCommand)
+        print(pingResults)
         if "!" in pingResults:
             break
         else:
