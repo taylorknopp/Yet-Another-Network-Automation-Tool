@@ -191,6 +191,7 @@ def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Se
         vrfName,outStr,serialOutBool = initialSetupOverSerial(portForConfig,dev,ip)
         if not serialOutBool:
             print(f"Failed serial settup for {dev.hostName}...Moving on")
+            continue
         print("PostSerialSettup")
         print(senCommand(portForConfig,"end"))
         if not vrfName == "":
