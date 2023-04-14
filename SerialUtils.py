@@ -191,11 +191,7 @@ def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Se
         if not serialOutBool:
             print(f"Failed serial settup for {dev.hostName}...Moving on")
         print("PostSerialSettup")
-        print(senCommand(portForConfig,"exit"))
-        print(senCommand(portForConfig,"exit"))
-        print(senCommand(portForConfig,"exit"))
-        print(senCommand(portForConfig,"exit"))
-        print(senCommand(portForConfig,"en"))
+        print(senCommand(portForConfig,"end"))
         print(senCommand(portForConfig,"copy tftp run vrf Mgmt-vrf"))
         print(senCommand(portForConfig,ip))
         print(senCommand(portForConfig,f"{dev.hostName}.ios"))
