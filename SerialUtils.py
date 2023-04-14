@@ -85,7 +85,7 @@ def bypassSetupWizzard(port: serial.Serial):
             break
             
 
-def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
+def initialSetupOverSerial(port: serial.Serial,dev:netDevice,tftpIp:str):
     print("InicialSerialSettup")
     port.flushInput()
     port.flushOutput()
@@ -100,18 +100,35 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
     time.sleep(5)
     out = senCommand(port,"\r")
     time.sleep(5)
-
+    usrInput = input("VRF Name(blank for none)?: ")
+    pingCommand = ""
+    if not usrInput == "":
+        pingCommand = f"do ping vrf {usrInput} {tftpIp}"
+    else:
+        pingCommand = f"do ping {tftpIp}"
+    
 
     print(senCommand(port,"en"))
     print(senCommand(port,"config t"))
-    print(senCommand(port,"do show ip interface brief"))
-    print(senCommand(port,"\r"))
-    print(senCommand(port,"\r"))
-    print(senCommand(port,"\r"))
-    print(senCommand(port,"\r"))
-    print(senCommand(port,"\r"))
-    print(senCommand(port,"\r"))
-    usrInput = ""
+    pingCount = 0;
+    while True:
+        pingCount += 1
+        pingResults = senCommand(port, pingCommand)
+        if "!" in pingResults:
+            break
+        else:
+            if pingCount <= 2:
+                time.sleep(5)
+                print(senCommand(port,f"interface {dev.ManagementPortName}"))
+                print(senCommand(port,f"ip address {dev.managementAddress} 255.255.255.0"))
+                print(senCommand(port,"no shutdown"))
+                continue
+            else:
+                input("Failed to set ip on interface or to contact server address, quitingn press any key to continue...")
+                return "",False
+    
+
+    """ usrInput = ""
     while True:
         usrInput = input("Does it look like the managementport was configured corectly? Y/N").lower()
         if usrInput == "y":
@@ -130,7 +147,7 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
             print(senCommand(port,"\r"))
             print(senCommand(port,"\r"))
         else:
-            print("Invalid input.")
+            print("Invalid input.") """
             
 
     read = ""
@@ -140,7 +157,7 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
         time.sleep(0.1)
         if oldLen == len(read):
             break
-    return read
+    return read,True
 
     
 def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Serial,ip,devList:list[netDevice]):
@@ -168,7 +185,9 @@ def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Se
     for dev in devList:
         print(senCommandToControl(portForControl,dev.serialPortAssociation.lower()))
         time.sleep(5)
-        initialSetupOverSerial(portForConfig,dev)
+        outStr,serialOutBool = initialSetupOverSerial(portForConfig,dev,ip)
+        if not serialOutBool:
+            print(f"Failed serial settup for {dev.hostName}...Moving on")
         print("PostSerialSettup")
         print(senCommand(portForConfig,"exit"))
         print(senCommand(portForConfig,"exit"))
