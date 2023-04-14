@@ -101,6 +101,7 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice,tftpIp:str):
     out = senCommand(port,"\r")
     time.sleep(5)
     usrInput = input("VRF Name(blank for none)?: ")
+    vrfName = usrInput
     pingCommand = ""
     if not usrInput == "":
         pingCommand = f"do ping vrf {usrInput} {tftpIp}"
@@ -127,7 +128,7 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice,tftpIp:str):
                 continue
             else:
                 input("Failed to set ip on interface or to contact server address, quitingn press any key to continue...")
-                return "",False
+                return vrfName,"",False
     
 
     """ usrInput = ""
@@ -159,7 +160,7 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice,tftpIp:str):
         time.sleep(0.1)
         if oldLen == len(read):
             break
-    return read,True
+    return vrfName,read,True
 
     
 def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Serial,ip,devList:list[netDevice]):
@@ -187,14 +188,27 @@ def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Se
     for dev in devList:
         print(senCommandToControl(portForControl,dev.serialPortAssociation.lower()))
         time.sleep(5)
-        outStr,serialOutBool = initialSetupOverSerial(portForConfig,dev,ip)
+        vrfName,outStr,serialOutBool = initialSetupOverSerial(portForConfig,dev,ip)
         if not serialOutBool:
             print(f"Failed serial settup for {dev.hostName}...Moving on")
         print("PostSerialSettup")
         print(senCommand(portForConfig,"end"))
-        print(senCommand(portForConfig,"copy tftp run vrf Mgmt-vrf"))
+        if not vrfName == "":
+            print(senCommand(portForConfig,f"copy tftp run vrf {vrfName}"))
+        else:
+            print(senCommand(portForConfig,f"copy tftp run"))
+            
         print(senCommand(portForConfig,ip))
-        print(senCommand(portForConfig,f"{dev.hostName}.ios"))
+        while True:
+            tftpOut = senCommand(portForConfig,f"{dev.hostName}.ios")
+            if "OK" in tftpOut:
+                break
+            else:
+                print("Socket or other error, retrying serial setup.")
+                vrfName,outStr,serialOutBool = initialSetupOverSerial(portForConfig,dev,ip)
+
+
+
         print(senCommand(portForConfig,""))
         print(senCommand(portForConfig,""))
         read = ""
