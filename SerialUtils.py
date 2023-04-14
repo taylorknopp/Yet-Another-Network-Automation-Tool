@@ -201,7 +201,7 @@ def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Se
         print(senCommand(portForConfig,ip))
         while True:
             tftpOut = senCommand(portForConfig,f"{dev.hostName}.ios")
-            tftpOut += senCommand("\r")
+            tftpOut += senCommand(portForConfig,"\r")
             if "OK" in tftpOut:
                 break
             else:
