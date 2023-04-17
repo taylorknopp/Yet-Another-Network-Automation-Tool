@@ -85,7 +85,7 @@ def bypassSetupWizzard(port: serial.Serial):
             break
             
 
-def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
+def initialSetupOverSerial(port: serial.Serial,dev:netDevice,tftpIp:str):
     print("InicialSerialSettup")
     port.flushInput()
     port.flushOutput()
@@ -100,18 +100,38 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
     time.sleep(5)
     out = senCommand(port,"\r")
     time.sleep(5)
-
+    usrInput = input("VRF Name(blank for none)?: ")
+    vrfName = usrInput
+    pingCommand = ""
+    if not usrInput == "":
+        pingCommand = f"do ping vrf {usrInput} {tftpIp}"
+    else:
+        pingCommand = f"do ping {tftpIp}"
+    
 
     print(senCommand(port,"en"))
     print(senCommand(port,"config t"))
-    print(senCommand(port,"do show ip interface brief"))
-    print(senCommand(port,"\r"))
-    print(senCommand(port,"\r"))
-    print(senCommand(port,"\r"))
-    print(senCommand(port,"\r"))
-    print(senCommand(port,"\r"))
-    print(senCommand(port,"\r"))
-    usrInput = ""
+    pingCount = 0;
+    while True:
+        pingCount += 1
+        print(f"Pinging {tftpIp}")
+        pingResults = senCommand(port, pingCommand)
+        print(pingResults)
+        if "!" in pingResults:
+            break
+        else:
+            if pingCount <= 2:
+                time.sleep(5)
+                print(senCommand(port,f"interface {dev.ManagementPortName}"))
+                print(senCommand(port,f"ip address {dev.managementAddress} 255.255.255.0"))
+                print(senCommand(port,"no shutdown"))
+                continue
+            else:
+                input("Failed to set ip on interface or to contact server address, quitingn press any key to continue...")
+                return vrfName,"",False
+    
+
+    """ usrInput = ""
     while True:
         usrInput = input("Does it look like the managementport was configured corectly? Y/N").lower()
         if usrInput == "y":
@@ -130,7 +150,7 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
             print(senCommand(port,"\r"))
             print(senCommand(port,"\r"))
         else:
-            print("Invalid input.")
+            print("Invalid input.") """
             
 
     read = ""
@@ -140,7 +160,7 @@ def initialSetupOverSerial(port: serial.Serial,dev:netDevice):
         time.sleep(0.1)
         if oldLen == len(read):
             break
-    return read
+    return vrfName,read,True
 
     
 def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Serial,ip,devList:list[netDevice]):
@@ -168,16 +188,29 @@ def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Se
     for dev in devList:
         print(senCommandToControl(portForControl,dev.serialPortAssociation.lower()))
         time.sleep(5)
-        initialSetupOverSerial(portForConfig,dev)
+        vrfName,outStr,serialOutBool = initialSetupOverSerial(portForConfig,dev,ip)
+        if not serialOutBool:
+            print(f"Failed serial settup for {dev.hostName}...Moving on")
+            continue
         print("PostSerialSettup")
-        print(senCommand(portForConfig,"exit"))
-        print(senCommand(portForConfig,"exit"))
-        print(senCommand(portForConfig,"exit"))
-        print(senCommand(portForConfig,"exit"))
-        print(senCommand(portForConfig,"en"))
-        print(senCommand(portForConfig,"copy tftp run vrf Mgmt-vrf"))
+        print(senCommand(portForConfig,"end"))
+        if not vrfName == "":
+            print(senCommand(portForConfig,f"copy tftp run vrf {vrfName}"))
+        else:
+            print(senCommand(portForConfig,f"copy tftp run"))
+            
         print(senCommand(portForConfig,ip))
-        print(senCommand(portForConfig,f"{dev.hostName}.ios"))
+        while True:
+            tftpOut = senCommand(portForConfig,f"{dev.hostName}.ios")
+            tftpOut += senCommand(portForConfig,"\r")
+            if "OK" in tftpOut:
+                break
+            else:
+                print("Socket or other error, retrying serial setup.")
+                vrfName,outStr,serialOutBool = initialSetupOverSerial(portForConfig,dev,ip)
+
+
+
         print(senCommand(portForConfig,""))
         print(senCommand(portForConfig,""))
         read = ""
