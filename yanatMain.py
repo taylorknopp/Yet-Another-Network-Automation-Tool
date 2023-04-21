@@ -519,6 +519,30 @@ def tftpRestore():
     global tftpServer
     global tftpServerThread
     global tftpRunning
+    devList = []
+    while True:
+        print("Devices to Restore: ")
+        for dev in devList:
+            print(dev.hostName)
+        print("----------------------------")
+        for i,dev in enumerate(listOfDevices):
+            print(f"[{i}.] | {dev.hostName}")
+        
+        userNum = input("Add Devices To Restore(Blank to coninue, Q to quit): ").lower()
+        try:
+            if userNum.isnumeric():
+                devList.append(listOfDevices[int(userNum)])
+            elif userNum == "":
+                break
+            elif userNum == "q":
+                return
+            else:
+                print("Invalid Input!")
+        except:
+            print("Invalid Input!")
+
+
+
     deviceMenu = "Addresses:  \n"
     addressList = getHostIp()
     for c,ip in enumerate(addressList):
@@ -550,7 +574,7 @@ def tftpRestore():
     controlPort = openSerialPort()
     time.sleep(5)
 
-    serialRestoreFromTFTP(serialPort,controlPort,ipToUse,listOfDevices)
+    serialRestoreFromTFTP(serialPort,controlPort,ipToUse,devList)
     tftpServerStop(tftpServerThread,tftpServer)
 
 def manualConsole():
