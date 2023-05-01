@@ -37,18 +37,23 @@ def openSerialPort():
                 print("Error Opening Port | " + str(e))
 
 def senCommand(port: serial.Serial,command: str):
+    #print(str(port))
     port.flushInput()
     port.flushOutput()
     command += "\r"
     port.write(command.encode('utf-8'))
+    print(command)
     time.sleep(0.25)
     read = ""
+    count = 0
     while True:
+        count += 1
         oldLen = len(read)
         read +=  port.readall().decode('utf-8')
         time.sleep(0.1)
         if oldLen == len(read):
             break
+
     return read
 
 def senCommandToControl(port: serial.Serial,command: str):
@@ -234,6 +239,58 @@ def serialRestoreFromTFTP(portForConfig: serial.Serial,portForControl: serial.Se
             print(senCommand(portForConfig,"crypto key generate rsa"))
             print(senCommand(portForConfig,"1024"))
 
-            
 
+def setupSSHOverSerial(dataPort: serial.Serial):
 
+    try:
+        print("InicialSerialSettup")
+        #print(str(dataPort))
+        #dataPort.flushInput()
+        #dataPort.flushOutput()
+        out = senCommand(dataPort,"\r")
+        print(out)
+        time.sleep(5)
+        if "[yes/no]" in out:
+            bypassSetupWizzard(dataPort)
+        else:
+            print("No Bypass")
+        print()
+        out = senCommand(dataPort,"\r")
+        print(out)
+        if ">" in out:
+           out = senCommand(dataPort,"en")
+           print(out)
+        elif not "#" in out:
+            print(senCommand(dataPort,"\r\n"))
+            out = senCommand(dataPort,"en")
+            print(out)
+
+        if "Password" in out:
+            print(senCommand(dataPort,"cisco"))
+        time.sleep(5)
+        print(senCommand(dataPort,"\r"))
+        time.sleep(5)
+        print(senCommand(dataPort,"\r"))
+        time.sleep(5)
+        print(senCommand(dataPort,"\r"))
+        print(out)
+        print(senCommand(dataPort,"config t"))
+        print(senCommand(dataPort,"enable secret cisco"))
+        print(senCommand(dataPort,"ip domain name trash.local"))
+        out = senCommand(dataPort,"crypto key generate rsa")
+        print(out)
+        if "Do you really want to replace them" in out:
+            print(senCommand(dataPort,"yes"))
+
+        print(senCommand(dataPort,"1024"))
+        print(senCommand(dataPort,"password encryption aes"))
+        print(senCommand(dataPort,"username cisco password 0 cisco"))
+        print(senCommand(dataPort,"ip ssh version 2"))
+        print(senCommand(dataPort,"line vty 0 15"))
+        print(senCommand(dataPort,"transport input ssh"))
+        print(senCommand(dataPort,"login local"))
+        print(senCommand(dataPort,"end"))
+        print(senCommand(dataPort,"write memory"))
+    except Exception as e:
+        print("Something Went Wrong")
+        print(str(e))

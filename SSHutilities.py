@@ -31,6 +31,7 @@ def updateDevice(CiscoDevice: netDevice):
         ssh = netmiko.ConnectHandler(**DeviceInfo)
         ssh.enable()
         Hostname = ssh.send_command('show run | sec hostname').split()[1]
+        
 
         
         
@@ -833,9 +834,13 @@ def backupAllDevsToTftp(listOfDevs: list[netDevice],ip:str):
                 'secret': dev.secret,
                 "fast_cli": False,
                 }
+            usrInput = input("VRF Name(blank for none)?: ")
+            vrfName = usrInput
             ssh = netmiko.ConnectHandler(**DeviceInfo)
             ssh.enable()
-            command = f"copy running-config tftp vrf Mgmt-vrf \r{ip}\r{dev.hostName}.ios"
+            command = f"copy running-config tftp \r{ip}\r{dev.hostName}.ios"
+            if not vrfName == "":
+                command = f"copy running-config tftp vrf {vrfName} \r{ip}\r{dev.hostName}.ios"
             out = ssh.send_command_timing(command)
             ssh.disconnect()
             print(f"{dev.hostName} tftp -> {ip}: {out}")

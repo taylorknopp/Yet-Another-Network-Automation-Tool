@@ -26,6 +26,7 @@ from SerialUtils import openSerialPort
 from SerialUtils import senCommand
 from SerialUtils import bypassSetupWizzard
 from SerialUtils import initialSetupOverSerial
+from SerialUtils import *
 from SSHutilities import addDeviceManually
 from IpTools import validateIp
 from IpTools import getHostIp
@@ -384,9 +385,81 @@ def rPing():
     input("continue?")
 
 def serialSetup():
-    global serialPort
+
+    serialPortToNumberDict = {1:'a',2:'b',3:'c',4:'d',5:'e',6:'f',7:'g',8:'h',9:'i',10:'j',11:'k',12:'l',13:'m',14:'n',15:'o',16:'p'}
+    print("Port for Serial Data")
     serialPort = openSerialPort()
-    initialSetupOverSerial(serialPort)
+    print("Port for Serial Control")
+    controlPort = openSerialPort()
+    time.sleep(5)
+    portList = []
+    cls()
+    userNum = ""
+    while True:
+        cls()
+        print("Devices to work on: ")
+        for port in portList:
+            print(port)
+        print("----------------------------")
+        print("Possible Ports to Chose")
+        print("----------------------------")
+        for i in serialPortToNumberDict.keys():
+            print(f"[{i}.] | {serialPortToNumberDict[i]}")
+        
+        userNum = input("Add Port To Work List(Blank to continue, Q to quit): ").lower()
+        try:
+            if userNum.isnumeric():
+                portList.append(serialPortToNumberDict[int(userNum)])
+            elif userNum == "":
+                if len(portList) <= 0:
+                    print("List Cannot Be Blank")
+                    time.sleep(2)
+                    continue
+                break
+            elif userNum == "q":
+                return
+            else:
+                print("Invalid Input!")
+        except:
+            print("Invalid Input!")
+    while True:
+        cls()
+        print("Devices to work on: ")
+        for port in portList:
+            print(port)
+        print("----------------------------")
+        for i,dev in enumerate(listOfDevices):
+            print(f"[{i}.] | {dev.hostName}")
+        print("1. Run Inicial Serial Settup On Selected Devices ")
+        print("2. Settup SSH Over Serial On Selected Devices")
+        userNum = input("Operation To Perform?:")
+        try:
+            if userNum.isnumeric() and int(userNum) <= 2 and int(userNum) >= 1:
+                break
+                
+            elif userNum == "q":
+                return
+            else:
+                print("Invalid Input!")
+        except:
+            print("Invalid Input!")
+    cls()
+    print(userNum)
+    if userNum == "1":
+        for dev in devList:
+            #inicial setup here
+            #senCommand(controlPort,dev.serialPortAssociation)
+            #InicialSerialSettup(dev)
+            pass
+    elif userNum == "2":
+        print(str(portList))
+        print(senCommand(controlPort,"\r"))
+        for port in portList:
+            print(port)
+            print(senCommandToControl(controlPort,port))
+            setupSSHOverSerial(serialPort)
+
+        
 
         
 
@@ -434,6 +507,7 @@ def tftpBackup():
         tftpServerThread,tftpServer = tftp_server_start(69,baseDir,ipToUse)
         tftpRunning = True
     backupAllDevsToTftp(listOfDevices,ipToUse)
+    input("Continue?")
     
 
 def bulkConfig():
@@ -837,6 +911,7 @@ def main():
     baseDir = os.getcwd()
     startDir = os.getcwd()
     while True:
+        cls()
         global settings
         global ssoPassword
         global gitPassword
