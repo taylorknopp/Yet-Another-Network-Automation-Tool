@@ -30,7 +30,9 @@ def updateDevice(CiscoDevice: netDevice):
         }
         ssh = netmiko.ConnectHandler(**DeviceInfo)
         ssh.enable()
-        Hostname = ssh.send_command('show run | sec hostname').split()[1]
+        runList = ssh.send_command("show version",use_textfsm=True)
+        print(type(runList[0]))
+        Hostname = runList[0]['hostname']
         
 
         
