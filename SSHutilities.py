@@ -239,12 +239,18 @@ def updateDevice(CiscoDevice: netDevice):
 def BuildInventoryOfDevicesInList(DeviceList: list[netDevice]):
     serialPortToNumberDict = {1:'A',2:'B',3:'C',4:'D',5:'E',6:'F',7:'G',8:'H',9:'I',10:'J',11:'K',12:'L',13:'M',14:'N',15:'O',16:'P'}
     i = 1
-    for CiscoDevice in DeviceList:
-        updateDevice(CiscoDevice)
-        CiscoDevice.serialPortAssociation = serialPortToNumberDict[i];
-        i += 1
-        if i > 16:
-            i = 0
+    if len(DeviceList) <= 16:
+        for CiscoDevice in DeviceList:
+            updateDevice(CiscoDevice)
+            CiscoDevice.serialPortAssociation = serialPortToNumberDict[i];
+            i += 1
+            if i > 16:
+                i = 0
+    else:
+        for CiscoDevice in DeviceList:
+            updateDevice(CiscoDevice)
+            CiscoDevice.serialPortAssociation = str(i);
+            i+=1
 
     return DeviceList
 
